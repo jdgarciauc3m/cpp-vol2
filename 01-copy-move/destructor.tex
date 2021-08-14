@@ -1,0 +1,105 @@
+\section{Destructores}
+
+\begin{frame}[fragile]{El problema de la desasignación}
+\begin{itemize}
+  \item Un tipo que adquiere \textmark{recursos} (ej. memoria) 
+        y no lo libera provoca un \textbad{goteo de memoria}.
+
+  \mode<presentation>{\vfill\pause}
+  \item \textgood{Solución simple}:
+    \begin{itemize}
+      \item Función miembro de liberación.
+    \end{itemize}
+\begin{lstlisting}
+class vecnum {
+  // ...
+  void libera() { delete []v; }
+  // ...
+};
+
+void f() {
+  vecnum v{5};
+  // ...
+  otra_funcion(); // <- ¿Y si lanza una excepción?
+  // ...
+  v.libera(); // Fácil de olvidar
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Función miembro de destrucción}
+\begin{itemize}
+  \item Un \textgood{destructor} es una función miembro especial que se ejecuta 
+        \textmark{de forma automática} cuando un objeto sale de alcance.
+    \begin{itemize}
+      \item No tiene tipo de retorno.
+      \item No toma parámetros.
+      \item Su nombre es el nombre de clase precedido del símbolo \cppkey{\~}.
+    \end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+class vector {
+  // ...
+  ~vector() { delete []v; }
+  // ...
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Invocación automática.
+\begin{lstlisting}
+void f() {
+  vecnum v{5};
+  // ...
+  otra_funcion(); // Si lanza excepción -> v se destruye
+  // ...
+} // v se destruye al salir
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Destrucción generada por defecto}
+\begin{itemize}
+  \item En realidad \textmark{todos los tipos} tienen una función miembro 
+        \textgood{destructor}.
+    \begin{itemize}
+      \item El \textmark{compilador genera automáticamente} una definición 
+            que es \textgood{válida} en la mayoría de los casos.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Dado un tipo \textbad{sin destructor}, 
+        el compilador \textgood{sintetiza} uno que:
+    \begin{itemize}
+      \item Invoca (recursivamente) al destructor de cada miembro.
+      \item El destructor de un tipo primitivo es la operación nula.
+    \end{itemize}
+\end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+struct estudiante {
+  string nombre;
+  vector<double> notas;
+  // ...
+};
+
+void f() {
+  estudiante e { "Carlos", {9.0, 9.5, 8.5} };
+  cout << e.nombre << " -> " << e.notas[0] << endl;
+} // Destrucción de e -> Destrucción de e.nombre y e.notas
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t]{Vector numérico con destructor}
+\begin{block}{vecnum.hpp}
+\mode<presentation>{
+  \lstinputlisting[basicstyle=\tiny]{ejemplos/01-copy-move/primitive-vecnum-destr/vecnum.hpp}
+}
+\mode<article>{
+  \lstinputlisting{ejemplos/01-copy-move/primitive-vecnum-destr/vecnum.hpp}
+}
+\end{block}
+\end{frame}

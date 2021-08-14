@@ -1,0 +1,411 @@
+\section{Constructores}
+
+\subsection{Tipos sin constructor}
+
+\begin{frame}[t,fragile]{Iniciación sin constructor}
+\mode<presentation>{\vspace{-1em}}
+\begin{itemize}
+  \item Iniciación de tipos primitivos.
+\begin{lstlisting}
+int x{1024}; // int x = 1024
+double * p{nullptr}; // double * p = nullptr
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Clases sin miembros privados que no tienen constructor:
+\begin{lstlisting}
+struct dispositivo {
+  string id_serie;
+  long long capacidad;
+};
+\end{lstlisting}
+
+    \mode<presentation>{\vfill\pause}
+    \begin{itemize}
+      \item Iniciación por miembros:
+\begin{lstlisting}
+dispositivo d1{"hda1", 1024};
+\end{lstlisting}
+
+      \mode<presentation>{\vfill\pause}
+      \item Iniciación directa
+\begin{lstlisting}
+dispositivo d3{d1}; // Copia miembro a miembro
+\end{lstlisting}
+
+      \mode<presentation>{\vfill\pause}
+      \item Iniciación por defecto
+\begin{lstlisting}
+dispositivo d4{};
+dispositivo d5;
+\end{lstlisting}
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Iniciación por defecto}
+\begin{itemize}
+    \item Iniciación de \textgood{variables globales} $\Rightarrow$ 
+          iniciación por defecto de \textmark{todos} los miembros.
+\begin{lstlisting}
+dispositivo d1; // id_serie="", capacidad=0
+dispositivo d2{}; // id_serie="", capaciad=0
+\end{lstlisting}
+
+    \mode<presentation>{\vfill\pause}
+    \item Iniciación de \textgood{variables locales} $\Rightarrow$ 
+          iniciación por defecto \textmark{sólo} de miembros de tipo clase.
+        \begin{itemize}
+          \item Miembros de tipos primitivos \textbad{sin iniciar}.
+        \end{itemize}
+\begin{lstlisting}
+void f() {
+  dispositivo d3; // id_serie="", capacidad=?
+  dispositivo d4{}; // id_sere="", capacidad=0
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Iniciación de miembros por defecto}
+\begin{itemize}  
+  \item Se puede indicar valor por defecto para miembros.
+\begin{lstlisting}
+struct dispositivo {
+  string id_serie{"sda1"};
+  long long capacidad = 1024; // Notación alternativa
+};
+
+dispositivo d; // d.serie=="sda1", d.capacidad==1024
+dispositivo e{"sda9"}; // e.serie="sda9", e.capacidad=1024
+dispositivo f{2048}; // No compila
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textbad{Nota}: También conocida como \textmark{NSDMI}
+        (non static data member initializers).
+\end{itemize}
+\end{frame}
+
+\subsection{Tipos con constructor}
+
+\begin{frame}[fragile]{Invocación al constructor}
+\begin{itemize}
+  \item Sin un tipo tiene uno o más constructores, 
+        todas las definiciones de objetos \textgood{deben invocar} 
+        \textmark{algún constructor}.
+    \begin{itemize}
+      \item El compilador \textbad{deja de generar} un 
+            \textmark{constructor por defecto}.
+    \end{itemize}
+\begin{lstlisting}
+struct complejo {
+  double real, imag;
+  complejo(double r);
+  complejo(double r, double i);
+};
+
+complejo c1; // Error -> Sin constructor por defecto
+complejo c2{}; // Error -> Sin constructor por defecto
+complejo c3{2.0}; // OK
+complejo c4{2.0, 3.5}; // OK
+complejo * pc = new complejo{2.0,3.5}; // OK
+complejo v[] { {1.0,1.5}, {2.0, 2.0} }; // OK
+vector<complejo> w { {1.0, 1.5}, {2.0, 2.0} }; // OK
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Invocación forzosa de constructor}
+\begin{itemize}
+  \item Existe una sintaxis para forzar la invocación de un constructor:
+        \textmark{uso de paréntesis}.
+    \begin{itemize}
+      \item No invoca iniciación miembro a miembro o basadas en listas.
+    \end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+struct punto {
+  double x, y;
+};
+punto p1(1.0, 1.0); // Error: No hay constructor
+punto p2{1.0, 1.0}; // OK
+punto p3(1.0); // Error: No hay constructor
+punto p4{1.0}; // x=1.0, y=0.0
+complejo c1(1.0, 1.0); // OK
+complejo c2{1.0, 1.0}; // OK
+complejo c3(1.0); // OK
+complejo c4{1.0}; // OK
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Útil para discriminar entre constructores de \cppid{std::vector} de tipos numéricos.
+\begin{lstlisting}
+vector<int> v{10}; // Vector con el valor 10. v.size() == 1
+vector<int> v(10); // Vector con 10 valores 0. v.size() == 10
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\subsection{Constructor por defecto}
+
+\begin{frame}[t,fragile]{Constructor por defecto}
+\begin{itemize}
+  \item El \textgood{constructor vacío} o \textmark{constructor por defecto} 
+        es un constructor que no toma ningún parámetro.
+\begin{lstlisting}
+vector();
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Define que debe hacerse:
+    \begin{itemize}
+      \item Cuando se \textmark{define un objeto} sin valor inicial.
+\begin{lstlisting}
+vector v;
+vector v{};
+\end{lstlisting}
+
+      \mode<presentation>{\pause}
+      \item Cuando se \textmark{asigna memoria} sin valor inicial
+\begin{lstlisting}
+vector * pv = new vector;
+\end{lstlisting}
+
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Generación del constructor por defecto}
+\mode<presentation>{\vspace{-.5em}}
+\begin{itemize}
+  \item El \textgood{constructor por defecto} se genera 
+        \textbad{si no hay ningún constructor}.
+
+\mode<presentation>{\vspace{-.75em}}
+\begin{columns}[T]
+\column{.2\textwidth}
+\column{.5\textwidth}
+\begin{lstlisting}
+class vector {
+public:
+  //...
+  //...
+};
+vector v; // OK
+\end{lstlisting}
+
+\column{.5\textwidth}
+\begin{lstlisting}
+class vector {
+public:
+  vector(int n);
+  //...
+};
+vector v; // Error
+\end{lstlisting}
+
+\end{columns}
+
+\mode<presentation>{\vfill\pause}
+\item Se puede \textbad{forzar} la generación del \textgood{constructor por defecto} o
+      \textbad{inhibir} su generación.
+
+\mode<presentation>{\vspace{-.75em}}
+\begin{columns}[T]
+\column{.2\textwidth}
+\column{.5\textwidth}
+\begin{lstlisting}
+class vector {
+public:
+  vector() = default;
+  vector(int n);
+  //...
+};
+vector v; // OK
+\end{lstlisting}
+
+\column{.5\textwidth}
+\begin{lstlisting}
+class vector {
+public:
+  vector() = delete;
+  //...
+  //...
+};
+vector v; // Error
+\end{lstlisting}
+
+\end{columns}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Constructor por defecto y arrays}
+\begin{itemize}
+  \item El tipo base de un array debe tener \textgood{constructor por defecto}, 
+        sólo si hace falta iniciar por defecto.
+\begin{lstlisting}
+struct punto {
+  double x, y;
+  punto();
+};
+struct complejo {
+  double real, imag;
+  complejo(double d, double i);
+};
+
+std::array<punto,16> v; // OK
+std::array<complejo,16> w; // Error: No pueden iniciarse elementos
+std::array<complejo,2> c { {1.0, 1.0}, {2.0, 2.0} }; // OK 
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Constructor por defecto y vectores}
+\begin{itemize}
+  \item El tipo base de un vector debe tener \textgood{constructor por defecto}, 
+        si hace falta iniciar por defecto.
+\begin{lstlisting}
+struct punto {
+  double x, y;
+  punto();
+};
+struct complejo {
+  double real, imag;
+  complejo(double d, double i);
+};
+
+vector<punto> vp1; // OK. No necesita iniciar
+vector<complejo> vc1; // OK. No necesita iniciar
+
+vector<punto> vp2(16); // OK. 16 elementos con valor por defecto
+vector<complejo> vc2(16); // Error: no puede iniciar 16 elementos
+vector<complejo> vc3{ {1.0, 1.0}, {2.0, 2.0} }; // OK
+vector<complejo> vc4{5, {1.0,1.0}}; // OK: 5 elementos iniciados
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\subsection{Conversión y constructor explícito}
+
+\begin{frame}[fragile]{Constructor explícito}
+\begin{itemize}
+  \item Un constructor que recibe un único argumento define una 
+        \textmark{operación de conversión}.
+\begin{lstlisting}
+class complejo {
+  complejo(double r, double i);
+  complejo(dobule r);
+  // ...
+};
+complejo c = 3.5; // Conversión a complejo
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Sin embargo:
+\begin{lstlisting}
+vecnum v = 5; // Conversión de entero a vecnum. Confuso.
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede forzar a que un constructor no actúe como operación de conversión:
+\begin{lstlisting}
+explicit vecnum(int n);
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textbad{Recomendación}: Marca como explícitos todos los constructores
+        de un único parámetro.
+\end{itemize}
+\end{frame}
+
+\subsection{Constructor basado en lista}
+
+\begin{frame}[fragile]{Lista de iniciación}
+\begin{itemize}
+  \item Un \textgood{constructor basado en lista} es un constructor que toma 
+        \textmark{un único argumento} de tipo \cppid{std::initializer\_list}.
+    \begin{itemize}
+      \item Permiten definir la construcción de objetos a partir de una 
+            \textmark{lista homogénea} de valores.
+    \end{itemize}
+\begin{lstlisting}
+lista l { 1, 2, 3, 4 }; // Invoca a lista(initializer_list<int>)
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Cualquier función puede tomar como parámetro una lista de iniciación.
+    \begin{itemize}
+      \item El argumento debe pasarse por valor.
+    \end{itemize}
+\begin{lstlisting}
+int maximo(initializer_list<int> l);
+
+void f() {
+  x = maximo({1, 3, 4, 2});
+  // ...
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{\textbf{initializer\_list}}
+\begin{itemize}
+  \item La clase \cppid{std::initializer\_list} ofrece funciones miembro 
+        para acceder a los valores de la lista:
+    \begin{itemize}
+      \item \cppid{begin()}: Iterador/puntero al principio de la lista.
+      \item \cppid{end()}: Iterador/puntero al final de la lista (siguiente del último).
+      \item \cppid{size()}: Tamaño de la lista.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Son suficientes para recorrer la lista:
+\begin{lstlisting}
+void imprime(std::initializer_list<int> l) {
+  for (auto p=l.begin(); p!=l.end(); ++p) {
+    cout << * p << '\n';
+  }
+}
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item O mejor:
+\begin{lstlisting}
+void imprime(std::initializer_list<int> l) {
+  for (auto x : l) {
+    cout << x << endl;
+  }
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\subsection{Constructores para \textbf{vecnum}}
+
+\begin{frame}[t,fragile]{Constructores}
+\begin{itemize}
+  \item Constructor vacío
+  \item Constructor con tamaño pasa a ser explícito.
+  \item Constructor con lista de iniciación.
+\end{itemize}
+\begin{block}{vecnum.hpp}
+\begin{lstlisting}
+class vecnum {
+public:
+  vecnum() : tamanyo_{0}, buffer_{nullptr} {}
+  explicit vecnum(int n) : tamanyo_{n}, buffer_{new double[n]{}} {}
+  vecnum(std::initializer_list<double> l);
+  ~vecnum() { delete []buffer_; }
+  //...
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\begin{frame}[t,fragile]{Implementando el constructor de lista}
+\begin{block}{vector.cpp}
+\lstinputlisting{ejemplos/01-copy-move/primitive-vecnum-completo/vecnum.cpp}
+\end{block}
+\end{frame}
