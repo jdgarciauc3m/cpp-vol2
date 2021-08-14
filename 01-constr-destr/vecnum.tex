@@ -27,13 +27,13 @@
 
 \begin{frame}[t]{Usando \textbf{unique\_ptr}}
 \begin{block}{vecnum.hpp}
-\lstinputlisting[basicstyle=\tiny]{ejemplos/01-copy-move/smart-vecnum/vecnum.hpp}
+\lstinputlisting[basicstyle=\tiny]{ejemplos/01-constr-destr/smart-vecnum/vecnum.hpp}
 \end{block}
 \end{frame}
 
 \begin{frame}[t]{Usando \emph{punteros primitivos}}
 \begin{block}{vecnum.hpp}
-\lstinputlisting[basicstyle=\tiny]{ejemplos/01-copy-move/primitive-vecnum/vecnum.hpp}
+\lstinputlisting[basicstyle=\tiny]{ejemplos/01-constr-destr/primitive-vecnum/vecnum.hpp}
 \end{block}
 \end{frame}
 
@@ -72,14 +72,14 @@ valgrind --tool=memcheck programa
   \item \textmark{valgrind} está integrado en \textmark{CLion}.
     \begin{itemize}
       \item Se puede ejecutar desde \textgood{Run} | \textgood{Rin with valgrind memcheck}.
-      \includegraphics[width=2em]{images/01-copy-move/valgrind.png}
+      \includegraphics[width=2em]{images/01-constr-destr/valgrind.png}
     \end{itemize}
   \mode<presentation>{\vfill\pause}
   \item Resultado en panel de \textmark{Run valgrind memcheck}.
 \end{itemize}
-\includegraphics[width=\textwidth]{images/01-copy-move/vecnum-main-valgrind.png}
+\includegraphics[width=\textwidth]{images/01-constr-destr/vecnum-main-valgrind.png}
 \mode<presentation>{\vfill\pause}
-\includegraphics[width=\textwidth]{images/01-copy-move/vecnum-ctor-valgrind.png}
+\includegraphics[width=\textwidth]{images/01-constr-destr/vecnum-ctor-valgrind.png}
 \end{frame}
 
 \begin{frame}[t]{Otra alternativa: \emph{sanitizers}}
@@ -105,7 +105,7 @@ add_compile_options(-fsanitize=address)
 add_link_options(-fsanitize=address)
 \end{lstlisting}
 \mode<presentation>{\vfill\pause}
-\includegraphics[width=\textwidth]{images/01-copy-move/vecnum-ctor-valgrind.png}
+\includegraphics[width=\textwidth]{images/01-constr-destr/vecnum-ctor-valgrind.png}
 \mode<presentation>{\vfill\pause}
 
 \begin{columns}[T]
