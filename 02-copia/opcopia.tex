@@ -1,0 +1,177 @@
+\section{Copia por defecto}
+
+\begin{frame}[fragile]{Operaciones de copia generadas}
+\begin{itemize}
+  \item Por cada tipo se generan de forma automática dos operaciones de copia:
+    \begin{itemize}
+      \item Construcción de copia.
+\begin{lstlisting}
+T y;
+T x{y}; // Construcción de copia
+\end{lstlisting}
+      \item Asignación de copia.
+\begin{lstlisting}
+T x, y;
+x = y; // Asignación de copia
+\end{lstlisting}
+    \end{itemize}
+  \item Implementación por defecto:
+    \begin{itemize}
+      \item Invocación (recursiva) de operaciones de copia para cada miembro.
+      \item La copia de tipos primitivos es la copia del valor.
+    \end{itemize}
+  \item ¿Es esto lo adecuado para nuestro \cppid{vector}?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{block}{main.cpp}
+\lstinputlisting{03-copymove/vec3/main.cpp}
+\end{block}
+\begin{lstlisting}[style=terminal]
+0 0 5 0 3.5 
+0 0 5 0 3.5 
+*** glibc detected *** ./test: double free or corruption (fasttop): 
+0x0000000001022010 ***
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{lstlisting}[style=terminal]
+valgrind ./test
+\end{lstlisting}
+\begin{lstlisting}[style=terminal,basicstyle=\tiny\ttfamily]
+==22680== Memcheck, a memory error detector
+==22680== Copyright (C) 2002-2011, and GNU GPL'd, by Julian Seward et al.
+==22680== Using Valgrind-3.7.0 and LibVEX; rerun with -h for copyright info
+==22680== Command: ./test
+==22680== 
+0 0 5 0 3.5 
+0 0 5 0 3.5 
+==22680== Invalid free() / delete / delete[] / realloc()
+==22680==    at 0x4C2A09C: operator delete[](void*) (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==22680==    by 0x400C66: vector::~vector() (in /home/jdaniel/Dropbox/cursos/intro-cpp11/init/vec2/test)
+==22680==    by 0x400BB5: main (in /home/jdaniel/Dropbox/cursos/intro-cpp11/init/vec2/test)
+==22680==  Address 0x5a06040 is 0 bytes inside a block of size 40 free'd
+==22680==    at 0x4C2A09C: operator delete[](void*) (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==22680==    by 0x400C66: vector::~vector() (in /home/jdaniel/Dropbox/cursos/intro-cpp11/init/vec2/test)
+==22680==    by 0x400BA9: main (in /home/jdaniel/Dropbox/cursos/intro-cpp11/init/vec2/test)
+==22680== 
+==22680== 
+==22680== HEAP SUMMARY:
+==22680==     in use at exit: 0 bytes in 0 blocks
+==22680==   total heap usage: 1 allocs, 2 frees, 40 bytes allocated
+==22680== 
+==22680== All heap blocks were freed -- no leaks are possible
+==22680== 
+==22680== For counts of detected and suppressed errors, rerun with: -v
+==22680== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 2 from 2)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\begin{itemize}
+  \item \alert{Problema}: Al realizar la copia, se ha copiado la dirección del array.
+    \begin{itemize}
+      \item Los dos vectores están compartiendo el mismo array.
+      \item Se está desasignando dos veces un mismo bloque de memoria.
+    \end{itemize}
+\end{itemize}
+\begin{tikzpicture}
+\tikzset{
+    bloque/.style={rectangle,draw=black, top color=white, bottom color=blue!50,
+                   very thick, inner sep=0.5em, minimum size=0.6cm, text centered, font=\tiny},
+    flecha/.style={->, >=latex', shorten >=1pt, thick},
+    etiqueta/.style={text centered, font=\tiny} 
+}  
+\node[bloque] (bsize) {5};
+\node[bloque,right=0cm of bsize] (bptr) { };
+\node[bloque,right=0.5cm of bptr] (v0) {0.0};
+\node[bloque,right=0cm of v0] (v1) {0.0};
+\node[bloque,right=0cm of v1] (v2) {5.0};
+\node[bloque,right=0cm of v2] (v3) {0.0};
+\node[bloque,right=0cm of v3] (v4) {3.5};
+\draw[flecha] (bptr) -- (v0);
+\node[etiqueta, left=0.1cm of bsize] {v1:};
+\node[etiqueta, above=0cm of bsize] {tam};
+
+\node[bloque, below=1cm of bsize] (bsize2) {5};
+\node[bloque,right=0cm of bsize2] (bptr2) { };
+\draw[flecha] (bptr2) -- (v0);
+\node[etiqueta, left=0.1cm of bsize2] {v2:};
+
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Operaciones de copia}
+
+\begin{frame}[fragile]{Constructor de copia}
+\begin{itemize}
+  \item El \alert{constructor de copia} se invoca cuando se construye un objeto
+        a partir de otro.
+    \begin{itemize}
+      \item Toma un argumento referencia constante al tipo.
+\begin{lstlisting}
+vector(const vector &);
+\end{lstlisting}
+    \end{itemize}
+  \item Se puede suprimir la generación automática del constructor de copia.
+\begin{lstlisting}
+vector(const vector &) = delete;
+\end{lstlisting}
+  \item El constructor de copia se invocará en definiciones del tipo:
+\begin{lstlisting}
+vector w {v};
+vector w = v;
+vector w(v);
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Implementación de constructor de copia}
+\begin{block}{vector.cpp}
+\lstinputlisting[firstline=17,lastline=22]{03-copymove/vec4/vector.cpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Operador de asignación de copia}
+\begin{itemize}
+  \item El \alert{operador de asignación de copia} se invoca cuando se asigna un objeto a otro.
+    \begin{itemize}
+      \item Toma un argumento referencia constante al tipo.
+      \item Devuelve una referencia al objeto asignado.
+      \item Debe ser una función miembro de la clase.
+\begin{lstlisting}
+vector & operator=(const vector &);
+\end{lstlisting}
+    \end{itemize}
+  \item Se puede suprimir la generación automática del operador de asignación de copia.
+\begin{lstlisting}
+vector & operator=(const vector &) = delete;
+\end{lstlisting}
+  \item El constructor de copia se invocará en definiciones del tipo:
+\begin{lstlisting}
+w = v;
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Implementación de operador de asignación de copia}
+\begin{block}{vector.cpp}
+\lstinputlisting[firstline=24,lastline=31]{03-copymove/vec4/vector.cpp}
+\end{block}
+\end{frame}
+
+\begin{frame}{El puntero \emph{this}}
+\begin{itemize}
+  \item \cppkey{this} es una palabra reservada que se puede evaluar dentro de cualquier función miembro de una clase.
+  \item Se evalúa a la dirección de memoria del objeto para el que se está ejecutando la función miembro.
+  \item La expresión \cppkey{return *this} en el operador de asignación de copia devuelve una referencia la objeto.
+  \item ¿Por qué?
+    \begin{itemize}
+      \item v1 = v2 = v3;
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+

@@ -1,0 +1,5 @@
+$(FINAL_COPIA_PDF): $(COPIA_PARTS) $(CONFIG_INPUT) $(IMG_INPUT)
+	$(LATEXMK) -jobname=$(COPIA_BASE) $(COPIA_BASE)/slides.tex
+
+$(FINAL_COPIA_EJ_PDF):	$(COPIA_EJ_PARTS) $(CONFIG_INPUT)
+	$(LATEXMK) -jobname=$(COPIA_BASE)-ej $(COPIA_BASE)/ej/hoja-ej.tex

@@ -1,0 +1,15 @@
+COPIA_BASE= 02-copia
+COPIA_PARTS= \
+$(COPIA_BASE)/*.tex  \
+ejemplos/$(COPIA_BASE)/vecnum-nocopy/* \
+metadata.tex \
+license-cc.tex
+
+COPIA_PDF=$(COPIA_BASE).pdf
+
+FINAL_COPIA_PDF=$(FINAL_DIR)/$(COPIA_PDF)
+
+COPIA_EJ_PARTS=$(COPIA_BASE)/ej/*.tex
+COPIA_EJ_PDF=$(COPIA_BASE)-ej.pdf
+FINAL_COPIA_EJ_PDF=$(FINAL_DIR)/$(COPIA_EJ_PDF)
+
