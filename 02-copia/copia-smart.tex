@@ -1,0 +1,94 @@
+\section{Copia y punteros elegantes}
+
+\begin{frame}[t,fragile]{Punteros elegantes en \textbf{vecnum}}
+\begin{itemize}
+  \item Se puede usar un \cppid{unique\_ptr} para representar el 
+        \textmark{búfer interno} de \cppid{vecnum}.
+\begin{block}{vecnum.hpp}
+\begin{lstlisting}
+class vecnum {
+public:
+  vecnum() = default;
+  explicit vecnum(int n) 
+      : tamanyo_{n}, buffer_{std::make_unique<double[]>(n)} {}
+  vecnum(std::initializer_list<double> l);
+  //...
+private:
+  int tamanyo_ = 0;
+  std::unique_ptr<double[]> buffer_ {};
+};
+\end{lstlisting}
+\end{block}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Constructor de lista con \textbf{unique\_ptr}}
+\begin{block}{vecnum.cpp}
+\begin{lstlisting}
+vecnum::vecnum(std::initializer_list<double> l)
+    : tamanyo_ {static_cast<int>(l.size())},
+      buffer_ {std::make_unique<double[]>(l.size())}
+{
+  std::copy_n(l.begin(), l.size(), buffer_.get());
+}
+\end{lstlisting}
+\end{block}
+
+\mode<presentation>{\vfill}
+\begin{itemize}
+  \item \cppid{buffer\_.get()} devuelve el puntero gestionado por el
+        \cppid{unique\_ptr}.
+    \begin{itemize}
+      \item Permite que \cppid{copy\_n()} escriba en 
+            \cppid{buffer\_[0]}, \cppid{buffer\_[1]}, \ldots
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Copiando punteros elegantes}
+\begin{itemize}
+  \item El tipo \cppid{unique\_ptr} tiene \textbad{eliminados}:
+    \begin{itemize}
+      \item El \textmark{constructor de copia}.
+      \item El \textmark{operador de asignación de copia}.
+    \end{itemize}
+\begin{lstlisting}
+auto p = std::make_unique<double>();
+auto q = p; // Error. No se puede construir por copia.
+
+std::unique_ptr<double> r{};
+r = p; // Error no se puede asignar
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textbad{Efecto}: No se generan operaciones de copia para una clase
+        que tenga un dato miembro de tipo \cppid{unique\_ptr}.
+    \begin{itemize}
+      \item Hay que definir las operaciones para la clase.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Un \textbf{vecnum} con punteros elegantes}
+\begin{block}{vecnum.hpp}
+\lstinputlisting[lastline=15]{ejemplos/02-copia/vecnum-smart/vecnum.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{vecnum.hpp}
+\lstinputlisting[firstline=17]{ejemplos/02-copia/vecnum-smart/vecnum.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{vecnum.cpp}
+\lstinputlisting[lastline=14]{ejemplos/02-copia/vecnum-smart/vecnum.cpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{vecnum.cpp}
+\lstinputlisting[firstline=16]{ejemplos/02-copia/vecnum-smart/vecnum.cpp}
+\end{block}
+\end{frame}
