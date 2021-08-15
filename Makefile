@@ -14,8 +14,8 @@ logos/arcos.png \
 logos/uc3m.png
 
 include guide/Makefile.def
-include 01-constr-destr/Makefile.def
-include 02-copia/Makefile.def
+include 02-constr-destr/Makefile.def
+include 03-copia/Makefile.def
 
 ALL_PARTS= \
 $(GUIDE_PARTS) \

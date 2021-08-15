@@ -1,4 +1,4 @@
-COPIA_BASE= 02-copia
+COPIA_BASE= 03-copia
 COPIA_PARTS= \
 $(COPIA_BASE)/*.tex  \
 ejemplos/$(COPIA_BASE)/vecnum-nocopy/* \
