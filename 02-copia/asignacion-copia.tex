@@ -1,0 +1,103 @@
+\section{Operador de asignación de copia}
+
+\begin{frame}[t,fragile]{Operador de asignación de copia}
+\begin{itemize}
+  \item El \textgood{operador de asignación de copia} se invoca cuando
+        \textemph{se asigna un objeto} a otro \textmark{del mismo tipo}.
+    \begin{itemize}
+      \item Toma un argumento referencia constante al tipo.
+      \item Devuelve una referencia al objeto asignado.
+      \item Debe ser una función miembro de la clase.
+    \end{itemize}
+\begin{lstlisting}
+vecnum & operator=(const vecnum &);
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede suprimir la generación automática del operador de asignación de copia.
+\begin{lstlisting}
+vecnum & operator=(const vecnum &) = delete;
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item El constructor de copia se invocará en expresiones del tipo:
+\begin{lstlisting}
+w = v; // w.operator=(v);
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Implementación de operador de asignación de copia}
+\mode<presentation>{\vspace{-.75em}}
+\begin{block}{vector.cpp}
+\lstinputlisting[firstline=16,lastline=25]{ejemplos/02-copia/vecnum-copy/vecnum.cpp}
+\end{block}
+\mode<presentation>{\vspace{-.75em}}
+
+\mode<presentation>{\vfill}
+\begin{itemize}
+  \item Reservar un bloque de memoria adicional para el nuevo búfer.
+  \item Copiar el tamaño.
+  \item Liberar el búffer anterior.
+  \item Apuntar \cppid{buffer\_} al nuevo búfer auxiliar.
+  \item Devolver una referencia al objeto acutal (\cppkey{*this}).
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{El puntero \textbf{this}}
+\begin{itemize}
+  \item \cppkey{this} es una palabra reservada que se puede evaluar
+        \textmark{dentro} de cualquier \textgood{función miembro} de una clase.
+
+  \mode<presentation>{\vfill\pause}
+  \item Se evalúa a la \textmark{dirección de memoria} del objeto para el que se 
+        está ejecutando la función miembro.
+    \begin{itemize}
+      \item \cppkey{this} es un puntero.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item La expresión \cppkey{return *this} en el operador de asignación de copia devuelve una referencia la objeto.
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{¿Por qué?}
+\begin{lstlisting}[escapechar=@]
+v1 = v2 = v3; @\pause@
+v1.operator=(v2=v3); @\pause@
+v1.operator=(v.operator=(v3));
+\end{lstlisting}
+    \begin{itemize}
+      \item Asociativo por la derecha.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Optimizando la auto-asignación}
+\begin{itemize}
+  \item Caso particular: \textmark{auto-asignación}
+\begin{lstlisting}
+v = v; // v.operator=(v);
+\end{lstlisting}
+    \begin{itemize}
+      \item Debería no hacerse nada.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+\begin{block}{Constructor de copia}
+\begin{lstlisting}
+vecnum & vecnum::operator=(const vecnum & v) {
+  if (this == &v) return *this;
+  
+  auto aux = new double[v.tamanyo_];
+  std::copy_n(v.buffer_, v.tamanyo_, aux);
+
+  tamanyo_ = v.tamanyo_;
+  delete []buffer_;
+  buffer_ = aux;
+
+  return *this;
+}
+\end{lstlisting}
+\end{block}
+\end{itemize}
+\end{frame}

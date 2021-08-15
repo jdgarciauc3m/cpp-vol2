@@ -1,0 +1,45 @@
+\section{Constructor de copia}
+
+\begin{frame}[fragile]{Constructor de copia}
+\begin{itemize}
+  \item El \textgood{constructor de copia} se invoca cuando se 
+        \textemph{construye un objeto} a partir de \textmark{otro del mismo tipo}.
+    \begin{itemize}
+      \item Toma un argumento referencia constante al tipo.
+\begin{lstlisting}
+vecnum(const vector &);
+\end{lstlisting}
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede suprimir la generación automática del constructor de copia.
+\begin{lstlisting}
+vecnum(const vecnum &) = delete;
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item El constructor de copia se invocará en definiciones del tipo:
+\begin{lstlisting}
+vecnum w {v}; // Iniciación directa
+vecnum w(v);  // Iniciación directa. Sintaxis tradicional.
+vecnum w = v; // Iniciación de copia. No es asignación.
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Implementación de constructor de copia}
+\begin{block}{vecnum.cpp}
+\lstinputlisting[firstline=11,lastline=15]{ejemplos/02-copia/vecnum-copy/vecnum.cpp}
+\end{block}
+
+\mode<presentation>{\vfill}
+\begin{enumerate}
+  \item Copia el tamaño.
+  \item Reserva memoria para un nuevo búfer.
+  \item Copia los elementos del búfer origen en el búfer destino.
+    \begin{itemize}
+      \item \cppid{copy\_n(p,n,q)}: Copia \cppid{n} elementos consecutivos almancenados
+            a partir de \cppid{p} en posiciones consecutivas a partir de \cppid{q}.
+    \end{itemize} 
+\end{enumerate}
+\end{frame}
