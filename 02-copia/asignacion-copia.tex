@@ -27,19 +27,25 @@ w = v; // w.operator=(v);
 \end{itemize}
 \end{frame}
 
-\begin{frame}[t]{Implementación de operador de asignación de copia}
-\mode<presentation>{\vspace{-.75em}}
+\begin{frame}[t,fragile]{Implementación de operador de asignación de copia}
 \begin{block}{vector.cpp}
-\lstinputlisting[firstline=16,lastline=25]{ejemplos/02-copia/vecnum-copy/vecnum.cpp}
+\begin{lstlisting}
+vecnum & vecnum::operator=(const vecnum & v) {
+  tamanyo_ = v.tamanyo_;
+  delete []buffer_;
+  buffer_ = new double[v.tamanyo_];
+  std::copy_n(v.buffer_, v.tamanyo_, buffer_);
+  return *this;
+}
+\end{lstlisting}
 \end{block}
-\mode<presentation>{\vspace{-.75em}}
 
 \mode<presentation>{\vfill}
 \begin{itemize}
-  \item Reservar un bloque de memoria adicional para el nuevo búfer.
   \item Copiar el tamaño.
   \item Liberar el búffer anterior.
-  \item Apuntar \cppid{buffer\_} al nuevo búfer auxiliar.
+  \item Reservar un bloque de memoria para el nuevo búfer.
+  \item Copiar elemento a elemento del buffer anterior al nuevo.
   \item Devolver una referencia al objeto acutal (\cppkey{*this}).
 \end{itemize}
 \end{frame}
@@ -87,14 +93,10 @@ v = v; // v.operator=(v);
 \begin{lstlisting}
 vecnum & vecnum::operator=(const vecnum & v) {
   if (this == &v) return *this;
-  
-  auto aux = new double[v.tamanyo_];
-  std::copy_n(v.buffer_, v.tamanyo_, aux);
-
   tamanyo_ = v.tamanyo_;
   delete []buffer_;
-  buffer_ = aux;
-
+  buffer_ = new double[v.tamanyo_];
+  std::copy_n(v.buffer_, v.tamanyo_, buffer_);
   return *this;
 }
 \end{lstlisting}
