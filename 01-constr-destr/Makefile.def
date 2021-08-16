@@ -1,4 +1,4 @@
-CONSTRDESTR_BASE= 02-constr-destr
+CONSTRDESTR_BASE= 01-constr-destr
 CONSTRDESTR_PARTS= \
 $(CONSTRDESTR_BASE)/*.tex  \
 ejemplos/$(CONSTRDESTR_BASE)/smart-vecnum/* \

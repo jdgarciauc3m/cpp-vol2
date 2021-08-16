@@ -1,4 +1,4 @@
-NOEXCEPT_BASE= 01-noexcept
+NOEXCEPT_BASE= 03-noexcept
 NOEXCEPT_PARTS= \
 $(NOEXCEPT_BASE)/*.tex  \
 metadata.tex \
