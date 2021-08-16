@@ -1,0 +1,47 @@
+\section{Especificiaciones de excepciones}
+
+\begin{frame}[t,fragile]{Funciones que lanzan excepciones}
+\begin{itemize}
+  \item Normalmente, una función, puede lanzar una excepción.
+\begin{lstlisting}
+void suma(int x, int y); // Puede lanzar excepciones
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede utilizar la especificación \cppkey{noexcept} para
+        indicar que una función \textbad{no lanza nunca excepciones}.
+\begin{lstlisting}
+void suma(int x, int y) noexcept; // No lanza excepciones
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textbad{No se comprueba} en tiempo de compilación 
+        si la especificación es cierta.
+    \begin{itemize}
+      \item Requeriría análisis completo de programa durante la fase de enlace.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Violación de especificación de excepciones}
+\begin{itemize}
+  \item Si una función marcada con \cppkey{noexcept} acaba lanzando una
+        excepción, se ha producido una \textbad{violación de especificación noexcept}.
+
+  \mode<presentation>{\vfill\pause}
+  \item \textgood{Efecto}:
+    \begin{itemize}
+      \item El programa \textmark{termina su ejecución} invocando a \cppid{std::terminate()}.
+      \item \textbad{No hay garantía} de que se ejecuten los destructores desde el punto
+            de \cppkey{throw} al punto de \cppkey{noexcept}.
+      \item \textbad{No hay garantía} de 
+            \textmark{desenrollado de la pila} (\emph{stack unwinding}).
+      \item \textbad{No hay posibilidad} de \textmark{recuperarse} y 
+            \textmark{continuar} la ejecución del programa.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Cuando se marca una función como \cppid{noexcept} se está indicando
+        que esta función no propaga excepciones.
+\end{itemize}
+\end{frame}

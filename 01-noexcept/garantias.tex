@@ -1,0 +1,189 @@
+\section{Garantías de excepciones}
+
+\begin{frame}[t]{Invariantes y estado válido}
+\begin{itemize}
+  \item \textgood{Invariantes de clase}: Condiciones que comple un objeto
+        establecidas por el \textmark{constructor} y mantenidas por todas las
+        \textmark{operaciones} hasta la ejecución del \textmark{destructor}.
+
+  \mode<presentation>{\vfill\pause}
+  \item Tipo \cppid{vecnum}:
+    \begin{itemize}
+      \item \cppid{tamanyo\_ >= 0}.
+      \item Si \cppid{tamanyo\_ == 0} $\Rightarrow$ \cppid{buffer\_ ==}\cppkey{nullptr}.
+      \item Si \cppid{tamanyo\_ > 0} $\Rightarrow$ \cppid{buffer\_} apunta
+            a un bloque de memoria dinámica capaz de albergar desde \cppid{buffer\_[0])}
+            a \cppid{buffer\_[tamanyo\_-1]}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Un \textmark{objeto} se encuentra en un \textgood{estado válido} si:
+    \begin{enumerate}
+      \item Su constructor se ha ejecutado.
+      \item Todas las operaciones ejecutadas mantienen las invariantes.
+      \item Su destructor no se ha ejecutado.
+    \end{enumerate}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Seguridad frente a excepciones}
+\begin{itemize}
+  \item Una \textmark{operación} es \textemph{segura frente a excepciones}
+        (\emph{exception safe}) si la operación deja al programa en un 
+        \textgood{estado válido} incluso cuando la operación 
+        \textbad{termina lanzando una excepción}.
+
+  \mode<presentation>{\vfill\pause}
+  \item Cada operación debe ofrecer la \textemph{garantía mas estricta posible}
+        de las siguientes:
+    \begin{itemize}
+
+      \mode<presentation>{\vfill\pause}
+      \item \textgood{Garantía \emph{nothrow}} $\Rightarrow$ Algunas operaciones.
+        \begin{itemize}
+          \item La operación no lanza excepciones.
+        \end{itemize}
+      \mode<presentation>{\vfill\pause}
+
+      \item \textgood{Garantía fuerte} $\Rightarrow$ Operaciones clave.
+        \begin{itemize}
+          \item La operación se completa o se deshacen los cambios.
+        \end{itemize}
+
+      \mode<presentation>{\vfill\pause}
+      \item \textgood{Garantía básica} $\Rightarrow$ Todas las operaciones.
+        \begin{itemize}
+          \item Si hay error, el objeto puede seguir usándose.
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Garantía básica}
+\begin{itemize}
+  \item La \textgood{garantía básica} requiere:
+    \begin{itemize}
+      \item Se mantienen las invariantes de todos los objetos.
+      \item No hay goteo (pérdida) de ningún recurso.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Implicaciones}:
+    \begin{itemize}
+      \item El objeto puede destruirse.
+      \item Se puede asignar otro valor a un objeto.
+    \end{itemize}
+\end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+vecracional & vecracional::operator=(const vecracional & v) {
+  tamanyo_ = v.tamanyo_;
+  delete []buffer_;
+  buffer_ = new racional[tamanyo_]; // bad_alloc, racional()
+  for (int i=0; i<tamanyo_; ++i) {
+    buffer_[i] = v.buffer_[i]; // operator=
+  }
+  return *this;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Cumpliendo la garantía básica}
+\begin{itemize}
+  \item \textmark{Razones} para fallo de la sentencia:
+\begin{lstlisting}
+buffer_ = new racional[tamanyo_];
+\end{lstlisting}
+    \begin{itemize}
+      \item Excepción \cppid{std::bad\_alloc}: No queda memoria.
+      \item Alguna excepción lanzada por constructor de \cppid{racional}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Efectos}:
+    \begin{itemize}
+      \item \cppid{buffer\_} quedaría apuntando a memoria liberada.
+      \item \textbad{No se puede} ejecutar el \textgood{destructor}.
+    \end{itemize}
+\end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+vecracional & vecracional::operator=(const vecracional & v) {
+  auto aux = new racional[v.tamanyo_]; // bad_alloc, racional()
+  tamanyo_ = v.tamanyo_;
+  delete []buffer_;
+  buffer_ = aux;
+  for (int i=0; i<tamanyo_; ++i) {
+    buffer_[i] = v.buffer_[i]; // operator=
+  }
+  return *this;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Garantía fuerte}
+\begin{itemize}
+  \item La \textmark{garantía fuerte} requiere:
+    \begin{itemize}
+      \item Cumplir la garantía básica, y además,
+      \item O la operación tiene éxito o no tiene efecto.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Consecuencias}:
+    \begin{itemize}
+      \item Ejecutar todas las operaciones que podrían fallar antes de empezar 
+            a modificar el estado del objeto.
+    \end{itemize}
+\end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+vecracional & vecracional::operator=(const vecracional & v) {
+  auto aux = new racional[v.tamanyo_]; // bad_alloc, racional()
+  std::copy_n(v.buffer_, v.tamanyo_, aux); // operator=
+  tamanyo_ = v.tamanyo_;
+  delete []buffer_;
+  buffer_ = aux;
+  return *this;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Garantía \textbf{nothrow}}
+\begin{itemize}
+  \item La \textmark{garantía \emph{nothrow}} requiere:
+    \begin{itemize}
+      \item Cumplir la garantía fuerte, y además,
+      \item No lanzar ninguna excepción.
+    \end{itemize}
+\end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}[basicstyle=\tiny,escapechar=@]
+class vecracional {
+public:
+  //...
+  const & racional operator[](int i) const { // Garantía nothrow
+    return buffer_[i];
+  }
+
+  racional & operator[](int i) { // Garantía nothrow
+    return buffer_[i];
+  }
+  @\pause@
+  const racional & posicion(int i) const { // Garantía fuerte
+    if (i<0 || i>=tamanyo_) throw std::range_error{"racional::posicion()"};
+    return buffer_[i];
+  }
+
+  racional & posicion(int i) { // Garantía fuerte
+    if (i<0 || i>=tamanyo_) throw std::range_error{"racional::posicion()"};
+    return buffer_[i];
+  }
+  //...
+};
+\end{lstlisting}
+\end{frame}
