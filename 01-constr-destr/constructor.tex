@@ -111,7 +111,7 @@ complejo c3{2.0}; // OK
 complejo c4{2.0, 3.5}; // OK
 complejo * pc = new complejo{2.0,3.5}; // OK
 complejo v[] { {1.0,1.5}, {2.0, 2.0} }; // OK
-vector<complejo> w { {1.0, 1.5}, {2.0, 2.0} }; // OK
+std::vector<complejo> w { {1.0, 1.5}, {2.0, 2.0} }; // OK
 \end{lstlisting}
 \end{itemize}
 \end{frame}
@@ -142,8 +142,8 @@ complejo c4{1.0}; // OK
   \mode<presentation>{\vfill\pause}
   \item Útil para discriminar entre constructores de \cppid{std::vector} de tipos numéricos.
 \begin{lstlisting}
-vector<int> v{10}; // Vector con el valor 10. v.size() == 1
-vector<int> v(10); // Vector con 10 valores 0. v.size() == 10
+std::vector<int> v{10}; // Vector con el valor 10. v.size() == 1
+std::vector<int> v(10); // Vector con 10 valores 0. v.size() == 10
 \end{lstlisting}
 \end{itemize}
 \end{frame}
@@ -155,7 +155,7 @@ vector<int> v(10); // Vector con 10 valores 0. v.size() == 10
   \item El \textgood{constructor vacío} o \textmark{constructor por defecto} 
         es un constructor que no toma ningún parámetro.
 \begin{lstlisting}
-vector();
+vecnum();
 \end{lstlisting}
 
   \mode<presentation>{\vfill\pause}
@@ -163,14 +163,14 @@ vector();
     \begin{itemize}
       \item Cuando se \textmark{define un objeto} sin valor inicial.
 \begin{lstlisting}
-vector v;
-vector v{};
+vecnum v;
+vecnum v{};
 \end{lstlisting}
 
       \mode<presentation>{\pause}
       \item Cuando se \textmark{asigna memoria} sin valor inicial
 \begin{lstlisting}
-vector * pv = new vector;
+vecnum * pv = new vecnum;
 \end{lstlisting}
 
     \end{itemize}
@@ -188,22 +188,22 @@ vector * pv = new vector;
 \column{.2\textwidth}
 \column{.5\textwidth}
 \begin{lstlisting}
-class vector {
+class vecnum {
 public:
   //...
   //...
 };
-vector v; // OK
+vecnum v; // OK
 \end{lstlisting}
 
 \column{.5\textwidth}
 \begin{lstlisting}
-class vector {
+class vecnum {
 public:
-  vector(int n);
+  vecnum(int n);
   //...
 };
-vector v; // Error
+vecnum v; // Error
 \end{lstlisting}
 
 \end{columns}
@@ -217,24 +217,24 @@ vector v; // Error
 \column{.2\textwidth}
 \column{.5\textwidth}
 \begin{lstlisting}
-class vector {
+class vecnum {
 public:
-  vector() = default;
-  vector(int n);
+  vecnum() = default;
+  vecnum(int n);
   //...
 };
-vector v; // OK
+vecnum v; // OK
 \end{lstlisting}
 
 \column{.5\textwidth}
 \begin{lstlisting}
-class vector {
+class vecnum {
 public:
-  vector() = delete;
+  vecnum() = delete;
   //...
   //...
 };
-vector v; // Error
+vecnum v; // Error
 \end{lstlisting}
 
 \end{columns}
@@ -277,13 +277,13 @@ struct complejo {
   complejo(double d, double i);
 };
 
-vector<punto> vp1; // OK. No necesita iniciar
-vector<complejo> vc1; // OK. No necesita iniciar
+std::vector<punto> vp1; // OK. No necesita iniciar
+std::vector<complejo> vc1; // OK. No necesita iniciar
 
-vector<punto> vp2(16); // OK. 16 elementos con valor por defecto
-vector<complejo> vc2(16); // Error: no puede iniciar 16 elementos
-vector<complejo> vc3{ {1.0, 1.0}, {2.0, 2.0} }; // OK
-vector<complejo> vc4{5, {1.0,1.0}}; // OK: 5 elementos iniciados
+std::vector<punto> vp2(16); // OK. 16 elementos con valor por defecto
+std::vector<complejo> vc2(16); // Error: no puede iniciar 16 elementos
+std::vector<complejo> vc3{ {1.0, 1.0}, {2.0, 2.0} }; // OK
+std::vector<complejo> vc4{5, {1.0,1.0}}; // OK: 5 elementos iniciados
 \end{lstlisting}
 \end{itemize}
 \end{frame}
