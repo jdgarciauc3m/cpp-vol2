@@ -1,7 +1,5 @@
 #include "vecnum.hpp"
 
-#include <algorithm>
-
 vecnum::vecnum(std::initializer_list<double> l)
     : tamanyo_ {static_cast<int>(l.size())}, buffer_ {new double[tamanyo_] {}}
 {
@@ -14,13 +12,11 @@ vecnum::vecnum(const vecnum & v)
   std::copy_n(v.buffer_, v.tamanyo_, buffer_);
 }
 vecnum & vecnum::operator=(const vecnum & v) {
-  auto aux = new double[v.tamanyo_];
-  std::copy_n(v.buffer_, v.tamanyo_, aux);
-
+  if (this == &v) return *this;
   tamanyo_ = v.tamanyo_;
   delete []buffer_;
-  buffer_ = aux;
-
+  buffer_ = new double[v.tamanyo_];
+  std::copy_n(v.buffer_, v.tamanyo_, buffer_);
   return *this;
 }
 
