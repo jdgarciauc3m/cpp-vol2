@@ -101,35 +101,47 @@ valgrind --tool=memcheck programa
   \item Modificación de opciones de compilación y enlace.
 \end{itemize}
 \begin{lstlisting}
-add_compile_options(-fsanitize=address)
-add_link_options(-fsanitize=address)
+add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+add_link_options(-fsanitize=address -fno-omit-frame-pointer)
 \end{lstlisting}
+
 \mode<presentation>{\vfill\pause}
+\begin{itemize}
+  \item Crear un perfil de ejecución en CLion.
+    \begin{enumerate}
+      \item Abre la ventana de \textmark{settings} del proyecto.
+      \item Selecciona \textmark{Build, Execution, Deployment}.
+      \item Selecciona \textmark{CMake}.
+      \item Copia el perfil \textmark{Debug} en un nuevo perfil.
+      \item Cambia el nombre a \textmark{Debug-address-sanitizer}.
+      \item En el campo de opciones pon 
+            \cppid{-DCMAKE\_CXX\_FLAGS="{}-fsanitize=address -fno-omit-frame-pointer"}.
+    \end{enumerate}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Resultado de Address Sanitizer}
 \includegraphics[width=\textwidth]{images/01-constr-destr/vecnum-ctor-valgrind.png}
 \mode<presentation>{\vfill\pause}
 
 \begin{columns}[T]
 \column{.5\textwidth}
 \textgood{AddressSanitizer}
-{\mode<presentation>{\footnotesize}
 \begin{itemize}
   \item Instrumentación binaria
   \item Deceleración = 2x
   \item Detecta desbordamientos
   \item No detecta accesos a memoria sin iniciar
 \end{itemize}
-}
 
 \column{.5\textwidth}
 \textgood{valgrind memcheck}
-{\mode<presentation>{\footnotesize}
 \begin{itemize}
   \item Instrumentación en compilación
   \item Deceleración = 20x
   \item No detecta desbordamientos
   \item Detecta accesos a memoria sin iniciar
 \end{itemize}
-}
 
 \end{columns}
 \end{frame}
