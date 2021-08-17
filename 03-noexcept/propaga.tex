@@ -1,0 +1,277 @@
+\section{Propagación de excepciones}
+
+\begin{frame}[t,fragile]{Propagación multinivel}
+\begin{itemize}
+  \item Una excepción se propaga a través de varios niveles hasta que alcanza
+        un manejador que la captura.
+\end{itemize}
+
+\begin{columns}[T]
+
+\column{.5\textwidth}
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+void h(std::istream & is) {
+  std::string s;
+  is >> s;
+  if (!valid(s)) throw formato_invalido{};
+  //...
+}
+
+void g(const std::string & nombre) {
+  std::ifstream entrada{nombre};
+  h(entrada);
+  //...
+}
+\end{lstlisting}
+
+\column{.5\textwidth}
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+void f(std::string & base) {
+  std::string nombre = base + ".txt"
+  try {
+    g(nombre);
+  }
+  catch(formato_invalido) {
+    // tratamiento del error
+  }
+}
+\end{lstlisting}
+\end{columns}
+
+\mode<presentation>{\vfill\pause}
+\begin{itemize}
+  \item Permite separar el punto de detección del error del punto de tratamiento.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Objeto excepción}
+\begin{itemize}
+  \item Cuando se lanza una excepción de un tipo \cppid{E}:
+\begin{lstlisting}
+throw E;
+\end{lstlisting}
+    \begin{itemize}
+      \item Se inicia un objeto temporal del tipo \cppid{E}.
+      \item Se pasa el objeto temporal a la correspondiente claúsula \cppkey{catch}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item El objeto excepción se puede potencialmente copiar una o varias vecces.
+    \begin{itemize}
+      \item Debe ser un objeto ligero (pocas palabras de memoria).
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item La captura de la excepción puede ser:
+    \begin{itemize}
+      \item Por valor.
+      \item Por referencia.
+      \item Por referencia constante.
+    \end{itemize}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Captura de excepciones por valor}
+\begin{itemize}
+  \item Se recibe una copia del objeto excepción.
+\begin{lstlisting}[basicstyle=\tiny]
+void f() {
+  try {
+    //...
+  }
+  catch(formato_invalido e) {
+    std::cerr << e.mensaje() << "\n";
+  }
+}
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Si no se necesita usar el objeto se puede omitir el nombre del parámetro.
+\begin{lstlisting}[basicstyle=\tiny]
+void f() {
+  try {
+    //...
+  }
+  catch(formato_invalido e) {
+    std::cerr << e.mensaje() << "\n";
+  }
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Captura de excepciones por referencia}
+\begin{itemize}
+  \item Se puede capturar por referencia o referencia constante.
+    \begin{itemize}
+      \item Normalmente se prefiere referencia constante.
+      \item Se recibe una referenica al objeto excepción.
+    \end{itemize}
+\begin{lstlisting}
+void f() {
+  try {
+    //...
+  }
+  catch(const std::out_of_range & e) {
+    //...
+  }
+  catch(const std::exception & e) {
+    //...
+  }
+  catch(...) {
+    //...
+  }
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Excepciones y destrucción}
+\begin{itemize}
+  \item Cuando se lanza una excepción se destruyen todos los objetos locales.
+\begin{lstlisting}
+void h(std::istream & is) {
+  std::string s;
+  is >> s;
+  if (!es_valida(s)) throw formato_invalido{};
+  //...
+}
+\end{lstlisting}
+    \begin{itemize}
+      \item Si la cadena \cppid{s} no \textmark{es valida}, al salir de
+            la función se destruye el objeto local \cppid{s}.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Desenrollado de pila}
+\begin{itemize}
+  \item Cuando se captura una excepción en un alcance, se transfiere el control
+        desde el punto en el que se realiza el \cppkey{throw}.
+    \begin{itemize}
+      \item En cada alcance intermedio se produce el \textmark{desenrollado de
+            la pila} (\emph{stack unwinding}).
+      \item Se destruyen todos los objetos locales de cada alcance.
+    \end{itemize}
+\end{itemize}
+
+\begin{columns}[T]
+
+\column{.5\textwidth}
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+void h(std::istream & is) {
+  std::string s;
+  is >> s;
+  if (!valid(s)) throw formato_invalido{};
+  //...
+} // throw => destruir s
+
+void g(const std::string & nombre) {
+  std::ifstream entrada{nombre};
+  h(entrada);
+  //...
+} // throw => destruir entrada
+\end{lstlisting}
+
+\column{.5\textwidth}
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+void f(std::string & base) {
+  std::string nombre = base + ".txt"
+  try {
+    g(nombre);
+  } // throw => No se destruye nombre
+  catch(formato_invalido) {
+    // tratamiento del error
+  }
+}
+\end{lstlisting}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[t,fragile]{Excepciones no tratadas}
+\mode<presentation>{\vspace{-0.75em}}
+\begin{itemize}
+  \item Si una excepción se propaga hasta el programa principal y tampo es tratada allí:
+    \begin{itemize}
+      \item Se invoca a la función \cppid{terminate()}.
+      \item El \textgood{desenrollado de la pila} es 
+            \textmark{dependiente de la implementación}.
+    \end{itemize}
+\end{itemize}
+
+\mode<presentation>{\vspace{-0.5em}}
+\pause
+\begin{columns}[T]
+
+\column{.5\textwidth}
+\begin{block}{main.cpp}
+\lstinputlisting[basicstyle=\tiny]{ejemplos/03-noexcept/escaping-exception/main.cpp}
+\end{block}
+
+\pause
+\column{.5\textwidth}
+\begin{lstlisting}[style=terminal]
+terminate called after throwing an instance of 'error'
+
+Process finished with exit code 134 (interrupted by signal 6: SIGABRT)
+\end{lstlisting}
+
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]{Excepciones y destructores}
+\begin{itemize}
+  \item \textbad{No puede haber} más de una excepción en vuelo en un programa.
+    \begin{itemize}
+      \item Desde el punto de \cppkey{throw} hasta el punto de \cppkey{catch}
+            \textbad{no se puede lanzar} otra excepción.
+      \item Podría ocurrir si se destruye un objeto local y su destructor
+            lanza una excepción.
+      \item \textmark{Solución}: Evitar excepciones en destructores.
+    \end{itemize}
+\end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{columns}[T]
+
+\column{.5\textwidth}
+\lstinputlisting[lastline=9]{ejemplos/03-noexcept/double-exception/main.cpp}
+\column{.5\textwidth}
+\lstinputlisting[firstline=11]{ejemplos/03-noexcept/double-exception/main.cpp}
+
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]{Comportamiento de \textbf{terminate()}}
+\mode<presentation>{\vspace{-0.5em}}
+\begin{itemize}
+  \item La función \cppid{std::terminate()} finaliza invocando a la función
+        \cppid{std::abort()}.
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede instalar una función que se ejecute para tratar la terminación.
+
+\mode<presentation>{\vspace{-0.5em}}
+\begin{columns}[T]
+
+\column{.6\textwidth}
+\lstinputlisting{ejemplos/03-noexcept/terminate-handler/main.cpp}
+
+\column{.4\textwidth}
+\begin{itemize}
+  \item Si la función de terminación no finaliza invocando a \cppid{std::abort()}
+        la implementación invoca a \cppid{std::abort()}.
+    \begin{itemize}
+      \item \cppid{std::terminate()} \textbad{nunca} vuelve.
+    \end{itemize}
+\end{itemize}
+\end{columns}
+
+\end{itemize}
+\end{frame}
