@@ -9,10 +9,18 @@ void suma(int x, int y); // Puede lanzar excepciones
 
   \mode<presentation>{\vfill\pause}
   \item Se puede utilizar la especificación \cppkey{noexcept} para
-        indicar que una función \textbad{no lanza nunca excepciones}.
+        indicar que una función \textmark{ofrece la garantía \emph{noexcept}}.
 \begin{lstlisting}
 void suma(int x, int y) noexcept; // No lanza excepciones
 \end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item La claúsula \cppkey{noexcept} acepta un argument booleano.
+\begin{lstlisting}
+void suma(int x, int y) noexcept(true); // No lanza excepciones
+void suma(int x, int y) noexcept(false); // Puede lanzar excepciones
+\end{lstlisting}
+
 
   \mode<presentation>{\vfill\pause}
   \item \textbad{No se comprueba} en tiempo de compilación 
@@ -42,6 +50,90 @@ void suma(int x, int y) noexcept; // No lanza excepciones
 
   \mode<presentation>{\vfill\pause}
   \item Cuando se marca una función como \cppid{noexcept} se está indicando
-        que esta función no propaga excepciones.
+        que esta función \textmark{no propaga excepciones}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Garantía \emph{nothrow}}
+\begin{itemize}
+  \item La \textmark{garantía \emph{nothrow}} es más difícil de obtener
+        de lo que puede parecer.
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}[escapechar=@]
+void cubo(int x) noexcept {
+  return x*x*x;
+}
+
+std::vector<int> cubo(const std::vector<int> & v) @{\color{red}noexcept@ {
+  std::vector<int> resultado(v.size()); // Podría lanzar std::bad_alloc
+  for (std::size_t i=0; i<v.size(); ++i) {
+    r.at(i) = cubo(v.at(i)); // Podría lanzar std::out_of_range?
+  }
+  return r;
+}
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Cualquier operación que implique reserva de memoria podría 
+        \textmark{potencialmente} \textbad{lanzar una excepción}
+        \cppid{std::bad\_alloc}.
+
+  \mode<presentation>{\vfill\pause}
+  \item A veces se puede deducir del contexto que una función 
+        \textgood{no lanzará excepciones}.
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Operador \emph{noexcept}}
+\begin{itemize}
+  \item La palabra reservada \cppkey{noexcept} se puede usar como un operador
+        sobre una expresión.
+    \begin{itemize}
+      \item Se puede aplicar a cualquier expresión.
+      \item Produce un resultado \textemph{booleano}.
+      \item Indica si la evaluación de la expresión es \cppkey{noexcept}.
+    \end{itemize}
+\begin{lstlisting}
+constexpr bool cond = noexcept(v.at(0));
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede usar para expresar la condición \cppkey{noexcept} de una función.
+\begin{lstlisting}
+void f(std::vector<double> & v) noexcept(noexcept(v.at(0)));
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Evaluación}:
+    \begin{itemize}
+      \item La expresión se evalúa en tiempo de compilación solamente.
+      \item Se comprueba si las subexpresiones están marcadas como \cppkey{noexcept}.
+    \end{itemize}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Excepciones y destructores}
+\begin{itemize}
+  \item En general, un destructor \textbad{no debería lanzar excepciones}.
+    \begin{itemize}
+      \item Los destructores de la biblioteca estándar son \cppkey{noexcept}.
+      \item El destructor para un tipo es, por defecto, \cppkey{noexcept}
+            si todos los miembros del tipo tienen destructores \cppkey{noexcept}.
+    \end{itemize}
+
+\mode<presentation>{\vfill}
+\begin{lstlisting}
+class estudiante {
+public:
+  //...
+  ~estudiante(); // Implícitamente noexcept
+private:
+  std::string nombre;
+  std::vector<std::string> calificaciones;
+};
+\end{lstlisting}
 \end{itemize}
 \end{frame}
