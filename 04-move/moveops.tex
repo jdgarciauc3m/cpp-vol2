@@ -1,0 +1,128 @@
+\section{Operaciones de movimiento}
+
+\begin{frame}[t,fragile]{Movimiento explícito}
+\begin{itemize}
+  \item Un tipo de datos en C++ puede soportar \textgood{operciones de movimiento}.
+    \begin{itemize}
+      \item Muchos tipos de la biblioteca estándar soportan el movimiento.
+    \end{itemize}
+\begin{lstlisting}
+std::string s = "Daniel";
+std::string t = "Carlos";
+std::string u = "María";
+s = t; // Copia -> s=="Carlos", t=="Carlos"
+s = std::move(u); // Movimiento -> s=="María", u=???
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Una \textgood{operación de movimiento} adquiere los recursos del
+        origen y los deja en un estado válido pero no especificado.
+
+  \mode<presentation>{\vfill\pause}
+  \item \textbad{Recuerda}: La función \cppid{std::move(x)} no mueve el objeto \cppid{x}
+        pero lo hace susceptible de ser movido.
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Intercambio de objetos movibles}
+\begin{itemize}
+  \item Se puede implementar el intercambio en función de operaciones de movimiento.
+    \begin{itemize}
+      \item El tipo debe ser \textmark{movible}.
+    \end{itemize}
+\end{itemize}
+\begin{lstlisting}[escapechar=@]
+void intercambia(std::string & s, std::string & t) {
+  std::string aux{std::move(s)};
+  s = std::move(t);
+  t = std::move(aux);
+}
+@\pause@
+void intercambia(std::vector<double> & v, std::vector<double> & w) {
+  std::vector<double> aux{std::move(v)};
+  v = std::move(w);
+  w = std::move(aux);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Intercambio de objetos no movibles}
+\begin{itemize}
+  \item Los tipos definidos por el usuario que tienen \textmark{operaciones de copia} 
+        definidas son tipos \textbad{no movibles}.
+    \begin{itemize}
+      \item Las \textmark{operaciones explícitas de movimiento} se transforman en 
+            \textgood{operaciones de copia}.
+    \end{itemize}
+\begin{lstlisting}
+void intercambia(vecnum & v, std::vecnum & w) {
+  vecnum aux{std::move(v)};
+  v = std::move(w);
+  w = std::move(aux);
+}
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textbad{Cuidado}: Todos los movimientos transformados en copias.
+    \begin{itemize}
+      \item Sigue siendo una operación costosa.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Movimiento y retorno de objetos locales}
+\begin{itemize}
+  \item Cuando una función devuelve una \textmark{copia de un objeto local}, 
+        se usa \textemph{implícitamente} el \textgood{movimiento}.
+\begin{lstlisting}
+std::string concatena(const std::string & a, const std::string & b) {
+  std::string resultado = b + ", " + a;
+  return resultado;
+}
+
+x = concatena("Daniel", "García"); // x = std::move(resultado);
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se aprovecha que \cppid{resultado} se va a \textbad{destruir} 
+        al \textmark{salir} de \cppid{concatena()}.
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Proceso}:
+    \begin{itemize}
+      \item \cppid{x} adquire los recursos de \cppid{resultado}.
+      \item \cppid{resultado} se destruye.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Elusión de copia/movimiento}
+\begin{itemize}
+  \item Cuando una función devuelve un \textmark{objeto temporal},
+        se \textemph{elude} la operación de \textgood{copia} o \textgood{movimiento}. 
+\begin{lstlisting}
+std::string concatena(const std::string & a, const std::string & b) {
+  return b + ", " + a;
+}
+
+x = concatena("Daniel", "García"); // x = b + ", " + a;
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Movimiento y paso por valor}
+\begin{itemize}
+  \item Una función que toma un parámetro por valor puede invocar
+        a una \textmark{operación de copia} o una \textmark{operación de movimiento}.
+\begin{lstlisting}
+void imprime(std::string s);
+//...
+std::string n{"Daniel"};
+imprime(n); // Copia n
+imprime(std::move(n)); // Mueve n
+imprime(concatena("Daniel","García")); // Mueve el resultado de concatena()
+\end{lstlisting}
+\end{itemize}
+\end{frame}

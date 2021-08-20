@@ -1,0 +1,124 @@
+\section{Copia frente a movimiento}
+
+\begin{frame}[t,fragile]{Intercambio de valores}
+\begin{itemize}
+  \item Función de intercambio para enteros.
+\begin{lstlisting}
+void intercambia(int & x, int & y) {
+  int aux = x;
+  x = y;
+  y = aux;
+}
+//...
+int a = 2, b = 4;
+intercambia(a,b); // a==4, b==2
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se realizan 3 copias de enteros.
+    \begin{enumerate}
+      \item Iniciación de \cppid{aux} $\Rightarrow$ 1 copia.
+      \item Asignación a \cppid{x}: $\Rightarrow$ 1 copia.
+      \item Asignación a \cppid{y}: $\Rightarrow$ 1 copia.
+    \end{enumerate}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Intercambio de valores compuetos}
+\begin{itemize}
+  \item Función de intercambio para vectores numéricos.
+\begin{lstlisting}
+void intercambia(vecnum & v, vecnum & w) {
+  vecnum aux{v};
+  v = w;
+  w = aux;
+}
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Asignaciones de memoria y copias de valores.
+    \begin{enumerate}
+      \item Iniciación de \cppid{aux} $\Rightarrow$ 
+            1 reserva + 
+            1 copia de entero + 1 copia de puntero +
+            1 copia de elementos.
+      \item Asignación a \cppid{v} $\Rightarrow$ 
+            1 liberación + 1 reserva + 
+            1 copia de entero + 1 copia de puntero +
+            1 copia de elementos.
+      \item Asignación a \cppid{w} $\Rightarrow$ 
+            1 liberación + 1 reserva + 
+            1 copia de entero + 1 copia de puntero +
+            1 copia de elementos.
+      \item Destrucción de \cppid{aux} $\Rightarrow$ 1 liberación.
+    \end{enumerate}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textbad{Lejos} de la solución óptima.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Si se tuviese acceso a la implementación}
+\begin{itemize}
+  \item Función de intercambio para vectores numéricos.
+\begin{lstlisting}
+void intercambia(vecnum & v, vecnum & w) {
+  int aux_tamanyo = v.tamanyo_;
+  v.tamanyo_ = w.tamanyo_;
+  w.tamanyo_ = aux_tamanyo_;
+  double * aux_buffer = v.buffer_;
+  v.buffer_ = w.buffer_;
+  w.buffer_ = aux_buffer;
+}
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Asignaciones de memoria y copias de valores.
+    \begin{enumerate}
+      \item Iniciación de \cppid{aux\_tamanyo}: 1 copia.
+      \item Asignaciones de \cppid{v.tamanyo\_} y \cppid{w.tamanyo\_}: 2 copias.
+      \item Iniciación de \cppid{aux\_buffer}: 1 copia.
+      \item Asignaciones de \cppid{v.buffer\_} y \cppid{w.buffer\_}: 2 copias.
+    \end{enumerate}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textgood{Solución óptima} \textbad{si se pudiese acceder a detalles internos}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Comparación}
+\begin{center}
+\begin{tabular}[t]{|l|r|r|}
+\hline
+& \textgood{Sin acceso} & \textgood{Con acceso}\\
+\hline
+\hline
+Reserva memoria & \textbad{3} & 0\\
+\hline
+Liberación de memoria & \textbad{3} & 0\\
+\hline
+
+Copias de enteros & 3 & 3\\
+\hline
+
+Copias de punteros & 3 & 3\\
+\hline
+
+Copias de elementos & \textbad{3}\footnote{El número elementos depende de \cppid{v} y \cppid{w}} & 0\\
+\hline
+
+\end{tabular}
+\end{center}
+
+\mode<presentation>{\vfill\pause}
+\begin{itemize}
+  \item El intercambio eficiente \textbad{no se puede implementar} en términos de copias.
+
+  \mode<presentation>{\vfill\pause}
+  \item La función \cppid{intercambia()} es un ejemplo: hay otros casos.
+    \begin{itemize}
+      \item Es necesaria una \textmark{solución general} al problema.
+    \end{itemize}
+\end{itemize}
+
+\end{frame}

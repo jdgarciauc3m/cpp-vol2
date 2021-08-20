@@ -1,0 +1,147 @@
+\section{Movimiento en tipos compuestos}
+
+\begin{frame}[t,fragile]{Composición y movimiento}
+\mode<presentation>{\vspace{-.75em}}
+\begin{block}{Tipos compuestos}
+\begin{lstlisting}
+class muestra {
+public:
+  //...
+  muestra(muestra && m) : id_{m.id_}, datos_{m.datos_} {}
+  muestra & operator=(muestra && m) {
+    if (this==&m) return *this;
+    id_ = m.id_;
+    datos_ = m.datos_;
+    return *this;
+  }
+private:
+  std::string id_;
+  vecnum datos_;
+};
+\end{lstlisting}
+\end{block}
+
+\begin{itemize}
+  \mode<presentation>{\vfill\pause}
+  \item \textbad{Problema}: Copia en vez de movimiento.
+    \begin{itemize}
+      \pause
+      \item \cppid{m.id\_} y \cppid{m.datos\_} no son objetos temporales.
+    \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Composición y movimiento resueltos}
+\begin{block}{Tipos compuestos}
+\begin{lstlisting}[escapechar=@]
+class muestra {
+public:
+  //...
+  muestra(muestra && m) : id_{@\color{red}std::move@(m.id_)}, datos_{@\color{red}std::move@m.datos_)} {}
+  muestra & operator=(muestra && m) {
+    if (this == &m) return *this;
+    id_ = @\color{red}std::move@(m.id_);
+    datos_ = @\color{red}std::move@(m.datos_);
+    return *this;
+  }
+private:
+  std::string id_;
+  vecnum datos_;
+};
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+
+\begin{frame}[t]{Reglas de generación de funciones especiales}
+\begin{itemize}
+  \item Si una clase \textbad{no tiene ninguna} de las siguientes operaciones 
+        \textmark{declaradas por el usuario}:
+    \begin{itemize}
+      \item \textgood{Constructor de copia}.
+      \item \textgood{Operador de asignación de copia}.
+      \item \textgood{Constructor de movimiento}.
+      \item \textgood{Operador de asignación de movimiento}.
+      \item \textgood{Destructor}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill}
+  \item \textmark{Entonces}:
+    \begin{itemize}
+      \item Se genera un \textgood{constructor de movimiento} \textemph{implícito}.
+      \item Se genera un \textgood{operador de asignación de movimiento} \textemph{implícito}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Las operaciones implícitas se generan a partir de las correspondientes operaciones
+        de cada miembro.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Simplifcando los tipos compuestos}
+\begin{block}{Tipos compuestos}
+\begin{lstlisting}
+class muestra {
+public:
+  //...
+  muestra(int id, const vecnum & datos) : id_{id}, datos_{datos} {}
+  // Copia, movimiento y destrucción generadas por el compilador
+private:
+  std::string id_;
+  vecnum datos_;
+};
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]{Funciones miembro especiales por defecto}
+\begin{itemize}
+  \item Las siguientes \textmark{funciones miembro especiales} se pueden forzar
+        para que se \textemph{generen por defecto}.
+    \begin{itemize}
+      \item \textgood{Constructor de copia}.
+      \item \textgood{Operador de asignación de copia}.
+      \item \textgood{Constructor de movimiento}.
+      \item \textgood{Operador de asignación de movimiento}.
+      \item \textgood{Destructor}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Útil para añdirlas individualmente cuando no se generan implícitamente.
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Recuerda}:
+    \begin{itemize}
+      \item Si se declara alguna, habrá que declararlas todas.
+      \item Si algún dato miembro tiene una función eliminada la correspondiente función
+            no se puede generar.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Funciones miembro especiales por defecto}
+\begin{block}{Tipos compuestos}
+\begin{lstlisting}
+class muestra {
+public:
+  //...
+  muestra(int id, const vecnum & datos) : id_{id}, datos_{datos} {}
+  ~muestra() { std::cerr << "Muestra " << id_ << " destruida\n"; }
+  muestra(muestra &&) = default;
+private:
+  std::string id_;
+  vecnum datos_;
+};
+\end{lstlisting}
+\end{block}
+
+\begin{itemize}
+  \item \cppid{muestra} \textemph{se puede} construir por movimiento.
+  \item \cppid{muestra} \textbad{no se puede} asignar por movimiento.
+\end{itemize}
+\end{frame}
+

@@ -1,0 +1,198 @@
+\section{Implementación de movimiento}
+
+\begin{frame}[t,fragile]{Constructor de movimiento}
+\begin{itemize}
+  \item El \textgood{constructor de movimiento} es un constructor que se invoca
+        cuando se construye un objeto a partir de:
+    \begin{itemize}
+      \item Un objeto temporal.
+\begin{lstlisting}
+vecnum v{obten_vecnum()};
+vecnum v = obten_vecnum();
+\end{lstlisting}
+      \item El resultado de \cppid{std::move()}.
+\begin{lstlisting}
+vecnum v{std::move(w)};
+vecnum v = std::move(w);
+\end{lstlisting}
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Declaración del \textgood{constructor de movimiento}.
+\begin{lstlisting}
+vecnum(vecnum && v) noexcept;
+\end{lstlisting}
+    \begin{itemize}
+      \item Parámetro de tipo \textmark{referencia a r-valor} (\cppkey{\&\&}).
+      \item Es recomendable que sea \cppkey{noexcept}.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Definición del constructor de movimiento}
+\begin{itemize}
+  \item \textmark{Pasos}:
+    \begin{enumerate}
+      \item El destino adquiere los recursos del origen.
+      \item El origen se dejan en un estado válido que permita la destrucción.
+    \end{enumerate}
+\end{itemize}
+
+\begin{columns}[T]
+
+\pause
+\column{.5\textwidth}
+\begin{block}{Declaración}
+\begin{lstlisting}
+class vecnum {
+public:
+  //...
+  vecnum(vecnum && v) noexcept;
+private:
+  int tamanyo_;
+  double * buffer_;
+};
+\end{lstlisting}
+\end{block}
+
+\pause
+\column{.5\textwidth}
+\begin{block}{Definición}
+\begin{lstlisting}
+vecnum::vecnum(vecnum && v) noexcept
+    : tamanyo_{v.tamanyo_},
+      buffer_{v.buffer_}
+{
+  v.tamanyo_ = 0;
+  v.buffer_ = nullptr;
+}
+\end{lstlisting}
+\end{block}
+
+\end{columns}
+\end{frame}
+
+\begin{frame}[t,fragile]{Tipos no movibles por construcción}
+\begin{itemize}
+  \item Si se quiere evitar que los objetos de un tipo se puedan mover en construcción,
+        se puede \textbad{eliminar} el \textgood{constructor de movimiento}.
+\begin{lstlisting}
+class vecnum {
+public:
+  vecnum(vecnum &&) = delete;
+  //...
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Cualquier invocación \textmark{implícita} o \textmark{explícita}
+        del constructor de movimiento provoca un \textbad{error de compilación}.
+\begin{lstlisting}
+vecnum make1() { return vecnum{1,2,3}; } // Elusión de copia/movimiento
+
+vecnum make2() {
+  vecnum r{1,2,3};
+  return r; // Error: Constructor de movimiento eliminado
+}
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Asignación de movimiento}
+\begin{itemize}
+  \item El \textgood{operador de asignación de movimiento} se invoca cuando
+        se asigna a un objeto:
+    \begin{itemize}
+      \item Un objeto temporal.
+\begin{lstlisting}
+v = obten_vecnum();
+\end{lstlisting}
+
+      \item El resultado de \cppid{std::move()}.
+\begin{lstlisting}
+v = std::move(w);
+\end{lstlisting}
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Declaración del \textgood{operador de asignación de movimiento}.
+\begin{lstlisting}
+vecnum & operator=(vecnum && v) noexcept;
+\end{lstlisting}
+    \begin{itemize}
+      \item Parámetro de tipo \textmark{referencia a r-valor} (\cppkey{\&\&}).
+      \item Es recomendable que sea \cppkey{noexcept}.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Definición de la asignación de movimiento}
+\begin{itemize}
+  \item \textmark{Pasos}:
+    \begin{itemize}
+      \item El destino libera sus recursos.
+      \item El destino adquiere los recursos del origen.
+      \item El origen se deja en un estado válido que permita la destrucción.
+    \end{itemize}
+\end{itemize}	
+
+\mode<presentation>{\vfill\pause}
+\begin{columns}[T]
+
+\column{.5\textwidth}
+\begin{block}{Declaración}
+\begin{lstlisting}
+class vecnum {
+public:
+  //...
+  vecnum & operator=(vecnum && v) noexcept;
+private:
+  int tamanyo_;
+  double * buffer_;
+};
+\end{lstlisting}
+\end{block}
+
+\pause
+\column{.5\textwidth}
+\begin{block}{Definición}
+\begin{lstlisting}
+vecnum & vecnum::operator=(vecnum && v) noexcept {
+  if (this == & v) return *this;
+  delete []buffer_;
+  tamanyo_ = v.tamanyo_;
+  buffer_ = v.buffer_;
+  v.tamanyo_ = 0;
+  v.buffer_ = nullptr;
+  return *this;
+}
+\end{lstlisting}
+\end{block}
+
+\end{columns}
+\end{frame}
+
+\begin{frame}[t,fragile]{Tipos no movibles por asignación}
+\begin{itemize}
+  \item Si se quiere evitar que los objetos de un tipo se puedan mover en asignaciones,
+       se puede \textbad{eliminar} el \textgood{operador de asignación de movimiento}.
+\begin{lstlisting}
+class vecnum {
+public:
+  vecnum & operator=(vecnum &&) = delete;
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Cualquier invocación al operador de asignación de movimiento provoca un
+        \textbad{error de compilación}.
+\begin{lstlisting}
+vecnum make() { return vecnum{1,2,3}; }
+
+vecnum v;
+v = make(); // Error: Operador de asignación eliminado
+v = std::move(w); // Error: Operador de asignación eliminado
+\end{lstlisting}
+\end{itemize}
+\end{frame}

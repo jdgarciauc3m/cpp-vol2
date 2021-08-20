@@ -1,0 +1,5 @@
+$(FINAL_MOVE_PDF): $(MOVE_PARTS) $(CONFIG_INPUT) $(IMG_INPUT)
+	$(LATEXMK) -jobname=$(MOVE_BASE) $(MOVE_BASE)/slides.tex
+
+$(FINAL_MOVE_EJ_PDF):	$(MOVE_EJ_PARTS) $(CONFIG_INPUT)
+	$(LATEXMK) -jobname=$(MOVE_BASE)-ej $(MOVE_BASE)/ej/hoja-ej.tex

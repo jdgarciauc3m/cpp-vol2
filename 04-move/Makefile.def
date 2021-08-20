@@ -1,0 +1,14 @@
+MOVE_BASE= 04-move
+MOVE_PARTS= \
+$(MOVE_BASE)/*.tex  \
+metadata.tex \
+license-cc.tex
+
+MOVE_PDF=$(MOVE_BASE).pdf
+
+FINAL_MOVE_PDF=$(FINAL_DIR)/$(MOVE_PDF)
+
+MOVE_EJ_PARTS=$(MOVE_BASE)/ej/*.tex
+MOVE_EJ_PDF=$(MOVE_BASE)-ej.pdf
+FINAL_MOVE_EJ_PDF=$(FINAL_DIR)/$(MOVE_EJ_PDF)
+
