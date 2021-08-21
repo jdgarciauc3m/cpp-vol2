@@ -1,0 +1,147 @@
+\section{Semantica de propiedad y \textbf{unique\_ptr}}
+
+\begin{frame}[t]{Semántica de propiedad estricta}
+\begin{itemize}
+  \item El tipo \cppid{unique\_ptr} ofrece \textmark{semántica de propiedad estricta}.
+    \begin{itemize}
+      \item \textbad{Nunca} hay dos \cppid{unique\_ptr} apuntando al mismo 
+            \textgood{bloque de memoria dinámica}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Ciclo de vida}:
+    \begin{itemize}
+      \item El bloque de memoria se \textgood{adquiere} con el \textemph{constructor}.
+      \item El bloque de memoria se \textgood{libera} con el \textemph{destructor}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Efecto}:
+    \begin{itemize}
+      \item Un \cppid{unique\_ptr} apunta a un \textgood{bloque de memoria dinámica}
+            o al puntero nulo \cppkey{nullptr}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Aproximación}:
+    \begin{itemize}
+      \item Un \cppid{unique\_ptr} \textbad{no se puede copiar}.
+      \item Un \cppid{unique\_ptr} \textemph{se puede mover}.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Copia}
+\begin{itemize}
+  \item El \textmark{constructor de copia} de \cppid{unique\_ptr} 
+        está \textbad{eliminado}.
+    \begin{itemize}
+      \item Pero se puede construir a partir de un \textmark{puntero primitivo}
+            que apunte a memoria dinámica adquiriendo su propiedad.
+      \item El constructor es \textemph{explícito}.
+    \end{itemize}
+\begin{lstlisting}
+std::unique_ptr<double> p{new double{42}}; // OK. Iniciación directa
+std::unique_ptr<double> q = new double{42}; // Error. Constructor explícito.
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item El \textmark{operador de asignación de copia} de \cppid{unique\_ptr}
+        está \textbad{eliminado}.
+    \begin{itemize}
+      \item No se puede asignar un \textmark{puntero primitivo}
+            a un \cppid{unique\_ptr}.
+      \item Pero se puede conseguir este efecto mediante la operación \cppid{reset(()}.
+    \end{itemize}
+\begin{lstlisting}
+std::unique_ptr<double> p;
+p = new double{42}; // Error
+p.reset(new double{42}); // OK
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Asignación y \textbf{nullptr}}
+\begin{itemize}
+  \item En general, no se puede asignar un \textmark{puntero primitivo} a un
+        \cppid{unique\_ptr}.
+\begin{lstlisting}
+std::unique_ptr<double> p{new double{42}};
+p = new double{99}; // Error
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Pero sí se puede asignar a un \cppid{unique\_ptr} el valor \cppkey{nullptr}.
+\begin{lstlisting}
+std::unique_ptr<double> p{new double{42}};
+//...
+p = nullptr; // Libera la memoria poseida por p
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item O se puede usar \cppkey{nullptr} como argumento para \cppid{reset()}.
+\begin{lstlisting}
+std::unique_ptr<double> p{new double{42}};
+//...
+p.reset(nullptr); // Libera la memoria poseida por p
+p.reset(); // Equivale a p.resent(nullptr)
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Movimiento}
+\begin{itemize}
+  \item El \textgood{constructor de movimiento} de \cppid{unique\_ptr} permite
+        la \textmark{transferencia de la propiedad} de un bloque de memoria.
+    \begin{itemize}
+      \item No es \textemph{explícito}.
+    \end{itemize}
+\begin{lstlisting}
+auto p = std::make_unique<double>(42); // OK. Iniciación de copia.
+auto q{std::make_unique<double>(33)}; // OK. Iniciación directa.
+auto r = p; // Error
+auto s = std::move(p); // *s==42, p==nullptr
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item El \textgood{operador de asignación de movimiento} de \cppid{unique\_ptr}
+        permite la \textmark{transferencia de la propiedad} de un bloque de memoria.
+    \begin{itemize}
+      \item Libera el bloque de memoria previo.
+    \end{itemize}
+\begin{lstlisting}
+auto p = std::make_unique<double>(42);
+p = std::make_unique<double>(33); // Movimiento. Libera bloque previo.
+auto q = std::make_unique<double>(99);
+q = p; // Error
+q = std::move(p); // Movimiento
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Transferencia de propiedad y funciones}
+\begin{itemize}
+  \item Funciones \textmark{sumidero}:
+\begin{lstlisting}
+void f(std::unique_ptr<double> p) { /* ... */ }
+//...
+auto p = std::make_shared<double>{42};
+//...
+f(p); // Error. No se puede copiar
+f(std::move(p)); // OK. Mueve p a función f()
+// p==nullptr
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Funciones \textmark{fuente}:
+\begin{lstlisting}
+std::unique_ptr<double> make_array(int n) {
+  auto r = std::make_unique<double[]>(n);
+  for (int i=0; i<n; ++i) { r[i]=std::sqrt(i); };
+  return r; 
+}
+//...
+auto v = make_array(10); // Movimiento
+\end{lstlisting}
+\end{itemize}
+\end{frame}
