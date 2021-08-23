@@ -1,0 +1,361 @@
+\section{Punteros de propiedad compartida}
+
+\subsection{Introducción}
+
+\begin{frame}[t,fragile]{Punteros compartidos}
+\begin{itemize}
+  \item Un \textgood{puntero compartido} ofrece el concepto de
+        \textmark{propiedad compartida}.
+    \begin{itemize}
+      \pause
+      \item Varios \textgood{punteros compartidos} pueden apuntar al mismo
+            objeto en memoria dinámica.
+
+      \pause
+      \item Un \textgood{puntero compartido} tiene asociado un 
+            \textmark{contador de referencias}.
+
+      \pause
+      \item Cuando el último \textgood{puntero compartido} se destruye,
+            se libera el objeto en memoria dinámica.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item El tipo \cppid{shared\_ptr} ofrece semántica de 
+        \textmark{propiedad compartida}.
+\begin{lstlisting}[escapechar=@]
+void f() {
+  std::shared_ptr<std::string> p {new std::string>{"Daniel"}}; // ref==1@\pause@
+  auto q = p; // ref==2@\pause@
+  std::cout << *q << " -> " << q->size() << "\n"; // Daniel 6
+  p = nullptr; // ref==1, q->bloque@\pause@
+} // Destrucción p -> ref==0 -> Liberación memoria
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Contador de referencias}
+
+\begin{columns}[T]
+
+\column{.5\textwidth}
+
+\begin{lstlisting}
+p = new std::string{"Daniel"};
+\end{lstlisting}
+
+\mode<presentation>{\vspace{-0.25cm}}
+\begin{tikzpicture}
+\node[bloque] (pobj) { };
+\node[etiqueta, left=0cm of pobj] {\cppid{p}};
+
+\node[bloque, right=0.5cm of pobj] (pref) {1};
+\node[etiqueta, above=0cm of pref] {\cppid{ref}};
+\node[bloque, right=0cm of pref] (pptr) { };
+\node[etiqueta, above=0cm of pptr] {\cppid{ptr}};
+\draw[flecha] (pobj) -- (pref);
+
+\node[bloquelibre, right=0.5cm of pptr] (pstr) {\cppstr{"Daniel"}};
+\draw[flecha] (pptr) -- (pstr);
+\end{tikzpicture}
+
+\mode<presentation>{\vspace{3em}\vfill\pause}
+\begin{lstlisting}
+auto q = p;
+\end{lstlisting}
+
+\mode<presentation>{\vspace{-0.25cm}}
+\begin{tikzpicture}
+\node[bloque] (pobj) { };
+\node[etiqueta, left=0cm of pobj] {\cppid{p}};
+
+\node[bloque, right=0.5cm of pobj] (pref) {2};
+\node[etiqueta, above=0cm of pref] {\cppid{ref}};
+\node[bloque, right=0cm of pref] (pptr) { };
+\node[etiqueta, above=0cm of pptr] {\cppid{ptr}};
+\draw[flecha] (pobj) -- (pref);
+
+\node[bloquelibre, right=0.5cm of pptr] (pstr) {\cppstr{"Daniel"}};
+\draw[flecha] (pptr) -- (pstr);
+
+\node[bloque, below=0.25cm of pobj] (qobj) { };
+\node[etiqueta, left=0cm of qobj] {\cppid{q}};
+\draw[flecha] (qobj) -- (pref);
+\end{tikzpicture}
+
+\column{.5\textwidth}
+
+\begin{lstlisting}
+p=nullptr;
+\end{lstlisting}
+
+\mode<presentation>{\vspace{-0.25cm}}
+\begin{tikzpicture}
+\node[bloque] (pobj) {\cppkey{nullptr}};
+\node[etiqueta, left=0cm of pobj] {\cppid{p}};
+
+\node[bloque, right=0.5cm of pobj] (pref) {0};
+\node[etiqueta, above=0cm of pref] {\cppid{ref}};
+\node[bloque, right=0cm of pref] (pptr) { };
+\node[etiqueta, above=0cm of pptr] {\cppid{ptr}};
+
+\node[bloquelibre, right=0.5cm of pptr] (pstr) {\cppstr{"Daniel"}};
+\draw[flecha] (pptr) -- (pstr);
+
+\node[bloque, below=0.25cm of pobj] (qobj) { };
+\node[etiqueta, left=0cm of qobj] {\cppid{q}};
+\draw[flecha] (qobj) -- (pref);
+\end{tikzpicture}
+
+
+\mode<presentation>{\vspace{1em}\vfill\pause}
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+} // Destrucción de q
+\end{lstlisting}
+
+\mode<presentation>{\vspace{-0.25cm}}
+\begin{tikzpicture}
+\node[bloque] (pobj) {\cppkey{nullptr}};
+\node[etiqueta, left=0cm of pobj] {\cppid{p}};
+
+\node[bloque, right=0.5cm of pobj] (pref) {1};
+\node[etiqueta, above=0cm of pref] {\cppid{ref}};
+\node[bloque, right=0cm of pref] (pptr) { };
+\node[etiqueta, above=0cm of pptr] {\cppid{ptr}};
+
+\node[bloquelibre, right=0.5cm of pptr] (pstr) {\cppstr{"Daniel"}};
+\draw[flecha] (pptr) -- (pstr);
+\node[etiqueta, above=0.5cm of pstr] (delete) {\cppkey{delete[]}};
+\draw[flecha] (delete) -- (pstr);
+
+\node[bloque, below=0.25cm of pobj] (qobj) { };
+\node[etiqueta, left=0cm of qobj] {\cppid{q}};
+\end{tikzpicture}
+
+\end{columns}
+\end{frame}
+
+\subsection{Construcción, copia y movimiento}
+
+\begin{frame}[t,fragile]{Construcción}
+\begin{itemize}
+  \item Se puede construir a partir de un \textmark{puntero primitivo}.
+    \begin{itemize}
+      \item El constructor es \textemph{explícito}.
+    \end{itemize}
+\begin{lstlisting}
+std::shared_ptr<double> p{new double{42.0}}; // OK. Iniciación directa
+std::shared_ptr<double> q = new double{1.5}; // Error. Iniciación de copia
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item La construcción por defecto inicia al \textmark{puntero nulo}.
+\begin{lstlisting}
+std::shared_ptr<double> p; // p==nullptr
+std::shared_ptr<double> q{nullptr}; // OK. Iniciación directa
+std::shared_ptr<double> r = nullptr; // OK. Iniciación de copia
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Semántica de copia}
+\begin{itemize}
+  \item Un \cppid{shared\_ptr} soporta \textmark{construcción de copia}.
+    \begin{itemize}
+      \item \textgood{Incrementa} el \textmark{contador de referencias}.
+      \item Ambos punteros \textgood{apuntan} al \textmark{mismo bloque} de memoria dinámica.
+    \end{itemize}
+\begin{lstlisting}
+std::shared_ptr<double> p {new double{42.0}};
+auto q = p;
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Un \cppid{shared\_ptr} soporta \textmark{asignación de copia}.
+    \begin{itemize}
+      \item \textgood{Decrementa} el \textmark{contador de referencias} del bloque anterior.
+      \item \textgood{Libera} el \textmark{bloque de memoria} anterior 
+            si se llegó a \cppid{0} referencias.
+      \item \textgood{Incrementa} el \textmark{contador de referencias}.
+      \item Ambos punteros \textgood{apuntan} al \textmark{mismo bloque} de memoria dinámica.
+    \end{itemize}
+\begin{lstlisting}
+std::shared_ptr<double> p {new double{42.0}};
+std::shared_ptr<double> q {new double{99.0}};
+p = q;
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Construcción de movimiento}
+\begin{itemize}
+  \item Un \cppid{shared\_ptr} soporta \textmark{construcción de movimiento}.
+    \begin{itemize}
+      \item Se transfiere la propiedad del bloque de memoria.
+    \end{itemize}
+\begin{lstlisting}
+std::shared_ptr<double> p {new double{42.0}};
+std::shared_ptr<double> q = std::move(p);
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Un \cppid{shared\_ptr} también se puede \textmark{construir por movimiento}
+        a partir de un \cppid{unique\_ptr}.
+\begin{lstlisting}[escapechar=@]
+auto p = std::make_unique<double>{42.0};
+std::shared_ptr<double> q = std::move(p);
+@\pause@
+std::unique_ptr<cuenta> crea_cuenta();
+std::unique_ptr<cuenta> u = crea_cuenta();
+std::shared_ptr<cuenta> s = crea_cuenta();
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Funciones auxiliares de creación}
+  \begin{itemize}
+    \item Funciones equivalentes a 
+          \cppid{make\_unique()} y 
+          \cppid{make\_unique\_for\_overwrite()}.
+      \begin{itemize}
+        \item \textgood{Muy útiles} en combinación con semántica de movimiento.
+      \end{itemize}
+
+    \mode<presentation>{\vfill\pause}
+    \item \cppid{make\_shared()}: Iniciación a valor.
+\begin{lstlisting}[escapechar=@]
+auto p = std::make_shared<double>(42.0); // *p==42@\pause@
+auto q = std::make_shared<punto>(3.5, 4.2); // q->x==3.5, q.y==4.2@\pause@
+auto r = std::make_shared<std::string>(); // *r == std::string{}@\pause@
+auto v = std::make_shared<int[]>(100); // v[i]== 0@\pause@
+auto w = std::make_shared<int[]>(100, 42); // w[i]==42@\pause@
+auto x = std::make_shared<double[20]>(); // x[i]==0.0@\pause@
+auto y = std::make_shared<double[20]>(1.5); // y[i]==1.5
+\end{lstlisting}
+
+    \mode<presentation>{\vfill\pause}
+    \item \cppid{make\_shared\_for\_overwrite()}: Iniciación por defecto.
+\begin{lstlisting}[escapechar=@]
+auto p = std::make_shared_for_overwrite<double>();@\pause@
+auto p = std::make_shared_for_overwrite<int[]>(100);
+\end{lstlisting}
+\textbad{Nota}: No soportado todavía en algunos compiladores.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Asignación de movimiento}
+\begin{itemize}
+  \item Un \cppid{shared\_ptr} soporta \textmark{asignación de movimiento}.
+    \begin{itemize}
+      \item Se transfiere la propiedad del bloque de memoria.
+    \end{itemize}
+\begin{lstlisting}
+auto p = std::make_shared<double>{42.0};
+auto q = std::make_shared<double>{99.0};
+p = std::move(q);
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Un \cppid{shared\_ptr} también se puede \textmark{asignar por movimiento}
+        a partir de un \cppid{unique\_ptr}.
+\begin{lstlisting}[escapechar=@]
+auto p = std::make_shared<double>{42.0};
+auto q = std::make_unique<double>{99.0};
+p = std::move(q);
+@\pause@
+std::unique_ptr<cuenta> crea_cuenta();
+std::unique_ptr<cuenta> u;
+u = crea_cuenta();
+std::shared_ptr<cuenta> s;
+s = crea-cuenta();
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\subsection{Acceso}
+
+\begin{frame}[t,fragile]{Acceso al puntero interno}
+\begin{itemize}
+  \item La operación \cppid{get()} permite acceder al \textmark{puntero primitivo}
+        al bloque de memoria dinámica.
+    \begin{itemize}
+      \item El bloque \textmark{sigue siendo gestionado} por el \cppid{shared\_ptr} y
+            se \textbad{libera} al destruir el puntero.
+    \end{itemize}
+\begin{lstlisting}
+void imprime(punto * p);
+//...
+auto p = std::make_shared<punto>(3.5, 4.2);
+imprime(p.get());
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Un \cppid{shared\_ptr} es \textemph{explíctamente} convertible a \cppkey{bool}.
+\begin{lstlisting}
+auto p = std::make_shared<punto>(3.5, 4.2);
+bool valido = p; // Error. No se puede convertir implícitamente
+bool valido = static_cast<bool>(p); // OK
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Pero se puede convertir \textemph{implícitamente} a \cppkey{bool}
+        en conversiones contextuales.
+\begin{lstlisting}
+if (p) { /*...*/ } // OK. Conversión contextual
+if (!p) { /*...*/ } // OK. Conversión contextual
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Acceso al contador de referencias}
+\begin{itemize}
+  \item La operación \cppid{use\_count()} da acceso al contador de referencias.
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}[escapechar=@]
+  auto p = std::make_shared<double>(42.0);
+  std::cout << "count(p)= " << p.use_count() << "\n"; // 1@\pause@
+  auto q = p;
+  std::cout << "count(p)= " << p.use_count() << "\n"; // 2
+  std::cout << "count(q)= " << q.use_count() << "\n"; // 2@\pause@
+  auto r = std::move(p);
+  std::cout << "count(p)= " << p.use_count() << "\n"; // 0
+  std::cout << "count(q)= " << q.use_count() << "\n"; // 2
+  std::cout << "count(r)= " << r.use_count() << "\n"; // 2@\pause@
+  q = nullptr;
+  std::cout << "count(p)= " << p.use_count() << "\n"; // 0
+  std::cout << "count(q)= " << q.use_count() << "\n"; // 0
+  std::cout << "count(r)= " << r.use_count() << "\n"; // 1@\pause@
+  r = nullptr;
+  std::cout << "count(p)= " << p.use_count() << "\n"; // 0
+  std::cout << "count(q)= " << q.use_count() << "\n"; // 0
+  std::cout << "count(r)= " << r.use_count() << "\n"; // 0
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Acceso al contenido}
+\begin{itemize}
+  \item Están definidos los operadores \cppkey{*} y \cppkey{->}:
+\begin{lstlisting}
+auto p = std::make_shared<punto>(3.5, 4.2);
+punto pos = *p;
+double x = p->x();
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Si el \cppid{shared\_ptr} es de tipo array se puede usar el operador \cppkey{[]}.
+\begin{lstlisting}
+auto v = std::make_shared<punto[]>(50);
+v[10].x = 3.5;
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
