@@ -24,7 +24,6 @@ vecnum & vecnum::operator=(const vecnum & v) {
   return *this;
 }
 
-
 void vecnum::reserva(int n) {
   if (n > capacidad_) {
     auto aux = std::make_unique_for_overwrite<double[]>(n);
