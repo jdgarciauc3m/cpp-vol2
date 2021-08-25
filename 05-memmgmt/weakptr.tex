@@ -1,0 +1,231 @@
+\section{Punteros débiles}
+
+\begin{frame}[t,fragile]{Guardando valores}
+\begin{itemize}
+  \item \textbad{Referencias cíclicas}:
+\end{itemize}
+\begin{lstlisting}
+struct nodo {
+  std::shared_ptr<nodo> p;
+};
+
+void f() {
+  auto a = std::make_shared<nodo>();
+  auto b = std::make_shared<nodo>();
+  a->p = b;
+  b->p = a;
+  //...
+} // ¡¡No se libera la memoria!!
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Compartición}
+\begin{itemize}
+  \item \textbad{Compartir acceso implica compartir propiedad}:
+\end{itemize}
+\begin{lstlisting}
+class cliente {
+public:
+  explicit cliente(const std::string & c) 
+      : cuenta_{std::make_shared<std::string>(c)} {}
+  std::shared_ptr<std::string> cuenta() { return cuenta_; }
+  void quita_cuenta() { cuenta_ = nullptr; }
+private:
+  std::shared_ptr<std::string> cuenta_;
+};
+
+void f() {
+  cliente juan{"01xyz"};
+  auto c = juan.cuenta();
+  juan.quita_cuenta();
+  // Sorpresa: c !=juan.cuenta()
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Punteros débiles}
+\begin{itemize}
+  \item El tipo \cppid{weak\_ptr} comparte el acceso a un objeto con un
+        \cppid{shared\_ptr} sin compartir la propiedad.
+    \begin{itemize}
+      \item No modifican el contador de referencias.
+      \item Pueden estar vacíos si el objeto asociado se destruye.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede construir un \cppid{weak\_ptr} a partir de un \cppid{shared\_ptr}.
+\begin{lstlisting}
+auto p = std::make_shared<punto>(1.5,4.5); // refs==1
+std::weak_ptr w = p; // refs==1
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Para acceder a través de un \cppid{weak\_ptr} hay que obtener un
+        \cppid{shared\_ptr} a través de la operación \cppid{lock()}.
+\begin{lstlisting}
+auto s = w.lock(); // s apunta al punto *p, refs==2
+s = nullptr; // refs==1
+p = nullptr; // refs==0, liberación
+auto t = w.lock(); // t==shared_ptr<punto>{nullptr}
+\end{lstlisting}
+  
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Otros constructores de \textbf{weak\_ptr}}
+\begin{itemize}
+  \item El \textgood{constructor por defecto} apunta al \textmark{puntero nulo}.
+\begin{lstlisting}
+weak_ptr p; // p==nullptr
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Los \cppid{weak\_ptr} se pueden \textmark{construir por copia}:
+\begin{lstlisting}
+auto s = std::make_shared<punto>(1.5,2.5);
+weak_ptr<punto> w1 = s;
+weak_ptr<punto> w2 = w1;
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Los \cppid{weak\_ptr} se pueden \textmark{construir por movimiento}:
+\begin{lstlisting}
+auto s = std::make_shared<punto>(1.5,2.5);
+weak_ptr<punto> w1 = s;
+weak_ptr<punto> w2 = std::move(w1); // w1==nullptr
+\end{lstlisting}
+\end{itemize} 
+\end{frame}
+
+\begin{frame}[t,fragile]{Asignación y punteros débiles}
+\begin{itemize}
+  \item Se puede realizar \textgood{asignación de copia} desde otro
+        \cppid{weak\_ptr} o desde un \cppid{shared\_ptr}.
+\begin{lstlisting}
+auto p = std::make_shared<punto>{1.5,2.5};
+std::weak_ptr<punto> q,r;
+q = p;
+r = q;
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Pero solamente se puede realizar \textgood{asignación de movimiento}
+        desde otro \cppid{weak\_ptr}.
+\begin{lstlisting}
+auto p = std::make_shared<punto>{1.5,2.5};
+std::weak_ptr<punto> q,r;
+q = std::move(p); // No mueve. Copia
+r = q; // r apunta a p, q apunta a nulo
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item También se pueden \textgood{intercambiar} dos punteros débiles.
+\begin{lstlisting}
+w1.swap(w2);
+std::swap(w1,w2);
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{\textbf{weak\_ptr} y contador de referencias}
+\begin{itemize}
+  \item Se puede acceder al \textmark{contador de referencias} del objeto apuntado 
+        con la operación \cppid{use\_count()}.
+    \begin{itemize}
+      \item Si el objeto se ha destruido, \cppid{use\_count()} devuelve \cppid{0}.
+    \end{itemize}
+\begin{lstlisting}
+auto p = std::make_shared<punto>{1.5,2.5};
+std::weak_ptr<punto> w = p;
+std::cout << w.use_count() << '\n'; // 1
+p = nullptr;
+std::cout << w.use_count() << '\n'; // 0
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item La operación \cppid{expired()} comprueba si el \textmark{objeto apuntado}
+        ha sido \textbad{destruido}.
+    \begin{itemize}
+      \item Puede ser más rápido que comparar \cppid{use\_count()} con \cppid{0}.
+    \end{itemize}
+\begin{lstlisting}
+auto p = std::make_shared<std::string>{"Daniel"};
+std::weak_ptr<punto> w = p;
+if (!w.expired()) { std::cout << *p << '\n'; } // Imprime "Daniel"
+p = nullptr;
+if (!w.expired()) { std::cout << *p << '\n'; } // No imprime nada
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Otra forma de acceder}
+\begin{itemize}
+  \item Se puede construir un \cppid{shared\_ptr} a partir de un \cppid{weak\_ptr}.
+    \begin{itemize}
+      \item Es una alternativa a la operación \cppid{locked()}.
+    \end{itemize}
+\begin{lstlisting}
+auto p = std::make_shared<std::string>{"C++"};
+std::weak_ptr<punto> w = p;
+auto s1 = w.locked();
+std::shared_ptr<std::string> s2{w};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Puede \textbad{lanzar la excecpión} \cppid{std::bad\_weak\_ptr} si:
+    \begin{itemize}
+      \item El puntero compartido asociado es \textbad{nulo} o ha \textbad{expirado}.
+    \end{itemize}
+\begin{lstlisting}
+auto p = std::make_shared<std::string>{"C++"};
+std::weak_ptr<punto> w = p;
+p = nullptr;
+std::shared_ptr<std::string> s{w}; // lanza bad_weak_ptr
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Referencias cíclicas}
+\begin{itemize}
+  \item El tipo \cppid{weak\_ptr} permite eliminar ciclos.
+\end{itemize}
+\begin{lstlisting}
+struct nodo {
+  std::weak_ptr<nodo> p;
+};
+
+void f() {
+  auto a = std::make_shared<nodo>();
+  auto b = std::make_shared<nodo>();
+  a->p = b;
+  b->p = a;
+  //...
+} // Se libera la memoria!!
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Compartición}
+\begin{itemize}
+  \item Se puede compartir el acceso sin compartir la propiedad:
+\end{itemize}
+\begin{lstlisting}
+class cliente {
+public:
+  explicit cliente(const std::string & c) 
+      : cuenta_{std::make_shared<std::string>(c)} {}
+  std::weak_ptr<std::string> cuenta() { return cuenta_; }
+  void quita_cuenta() { cuenta_ = nullptr; }
+private:
+  std::shared_ptr<std::string> cuenta_;
+};
+
+void f() {
+  cliente juan{"01xyz"};
+  auto c = juan.cuenta();
+  juan.quita_cuenta();
+  // OK: c y juan.cuenta() han expirado
+}
+\end{lstlisting}
+\end{frame}
+
