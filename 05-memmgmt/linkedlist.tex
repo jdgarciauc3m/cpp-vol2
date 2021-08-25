@@ -1,0 +1,470 @@
+\section{Una lista enlazada}
+
+\subsection{Diseño}
+
+\begin{frame}[t]{Estructuras de datos enlazadas}
+\begin{itemize}
+  \item \textmark{Objetivo}: Representar una lista dinámica de valores
+        manteniendo punteros al siguiente elemento y al anterior.
+
+\mode<presentation>{\vfill\pause}
+\begin{tikzpicture}
+\node[bloquelibre] (nullizq) {\cppkey{nullptr}};
+
+\node[bloquelibre, right=0.5cm of nullizq] (ant1) { };
+\node[bloque, right=0cm of ant1] (val1) {3.0};
+\node[bloquelibre, right=0cm of val1] (sig1) { };
+
+\node[bloquelibre, right=0.5cm of sig1] (ant2) { };
+\node[bloque, right=0cm of ant2] (val2) {4.0};
+\node[bloquelibre, right=0cm of val2] (sig2) { };
+
+\node[bloquelibre, right=0.5cm of sig2] (ant3) { };
+\node[bloque, right=0cm of ant3] (val3) {5.0};
+\node[bloquelibre, right=0cm of val3] (sig3) { };
+
+\node[bloquelibre, right=0.5cm of sig3] (nullder) {\cppkey{nullptr}};
+\draw[flecha] (ant1) -- (nullizq);
+\draw[flecha] (sig1) to [bend right=30] (ant2);
+\draw[flecha] (sig2) to [bend right=30] (ant3);
+\draw[flecha] (ant2) to [bend right=30] (sig1);
+\draw[flecha] (ant3) to [bend right=30] (sig2);
+\draw[flecha] (sig3) -- (nullder);
+\end{tikzpicture}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Efectos}:
+    \begin{itemize}
+      \item No hace falta reservar capacidad extra para crecimiento.
+      \item No hay que copiar elementos al reasignar memoria.
+      \item Solamente se consume la memoria que se necesita.
+      \item Sobrecoste: dos punteros por nodo.
+      \item Puede tener efectos adversos con caché de procesador.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Diseño}
+
+\begin{columns}[T]
+
+\column{.6\textwidth}
+\begin{itemize}
+  \item Estrategia de \textmark{nodo centinela}:
+    \begin{itemize}
+      \item Representar la lista mediante dos punteros.
+        \begin{itemize}
+          \item \cppid{inicio}: Primer nodo de la lista.
+          \item \cppid{fin}: Último nodo de la lista.
+        \end{itemize}
+      \item Se usa un nodo adicional al final de la lista.
+    \end{itemize}
+\end{itemize}
+
+\column{.1\textwidth}
+\column{.4\textwidth}
+\pause
+\begin{itemize}
+  \item Lista vacía:
+\end{itemize}
+\mode<presentation>{\vspace{1em}}
+\begin{tikzpicture}
+\node[bloquelibre] (ant1) {\cppkey{nullptr}};
+\node[bloque, right=0cm of ant1] (valor1) {\cppid{?}};
+\node[bloquelibre,right=0cm of valor1] (sig1) {\cppkey{nullptr}};
+
+\node[bloquelibre,below=0.5cm of ant1] (inicio) { };
+\node[etiqueta,below=0cm of inicio] {\cppid{inicio}};
+\draw[flecha] (inicio) -- (valor1);
+\node[bloquelibre,below=0.5cm of sig1] (fin) { };
+\draw[flecha] (fin) -- (valor1);
+\node[etiqueta,below=0cm of fin] {\cppid{fin}};
+\end{tikzpicture}
+
+\end{columns}
+
+  \mode<presentation>{\vfill\pause}
+  \begin{itemize}
+    \item Lista \cppid{\{1,2,3\}}:
+  \end{itemize}
+
+\mode<presentation>{\vspace{1em}}
+\begin{tikzpicture}
+\node[bloquelibre] (ant1) {\cppkey{nullptr}};
+\node[bloque, right=0cm of ant1] (valor1) {\cppid{1}};
+\node[bloquelibre,right=0cm of valor1] (sig1) { };
+
+\node[bloquelibre,right=0.5cm of sig1] (ant2) {};
+\node[bloque, right=0cm of ant2] (valor2) {\cppid{2}};
+\node[bloquelibre,right=0cm of valor2] (sig2) {};
+
+\draw[flecha] (sig1) to[bend right=30] (ant2);
+\draw[flecha] (ant2) to[bend right=30] (sig1);
+
+\node[bloquelibre,right=0.5cm of sig2] (ant3) { };
+\node[bloque, right=0cm of ant3] (valor3) {\cppid{3}};
+\node[bloquelibre,right=0cm of valor3] (sig3) { };
+
+\draw[flecha] (sig2) to[bend right=30] (ant3);
+\draw[flecha] (ant3) to[bend right=30] (sig2);
+
+\node[bloquelibre,right=0.5cm of sig3] (ant4) { };
+\node[bloque, right=0cm of ant4] (valor4) {\cppid{?}};
+\node[bloquelibre,right=0cm of valor4] (sig4) {\cppkey{nullptr}};
+
+\draw[flecha] (sig3) to[bend right=30] (ant4);
+\draw[flecha] (ant4) to[bend right=30] (sig3);
+
+\node[bloquelibre,below=0.5cm of ant1] (inicio) { };
+\node[etiqueta,below=0cm of inicio] {\cppid{inicio}};
+\draw[flecha] (inicio) -- (valor1);
+\node[bloquelibre,below=0.5cm of sig4] (fin) { };
+\draw[flecha] (fin) -- (valor4);
+\node[etiqueta,below=0cm of fin] {\cppid{fin}};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Representación y operaciones}
+
+\begin{frame}[t,fragile]{Representación interna}
+\begin{block}{listnum.hpp}
+\begin{lstlisting}
+class listnum {
+  //...
+private:
+  struct node {
+    explicit node(double x) : valor_{x} {}
+    double valor_;
+    std::shared_ptr<node> sig_;
+    std::weak_ptr<node> ant_;
+  };
+
+  std::shared_ptr<node> inicio_;
+  std::shared_ptr<node> fin_;
+  //...
+};
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\begin{frame}[t,fragile]{Constructores}
+\begin{block}{listnum.hpp}
+\begin{lstlisting}
+class listnum {
+public:
+  listnum();
+  explicit listnum(int n);
+  listnum(std::initializer_list<double> l);
+
+  listnum(const listnum & l);
+  listnum & operator=(const listnum & l);
+
+  listnum(listnum &&) = default;
+  listnum & operator=(listnum &&) = default;
+
+  ~listnum() = default;
+  //...
+}
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Operaciones}
+\begin{block}{listnum.hpp}
+\begin{lstlisting}
+class listnum {
+public:
+  //...
+  [[nodiscard]] int tamanyo() const noexcept;
+
+  void agrega_final(double x);
+  //...
+}
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\subsection{Agregación de elementos}
+
+\begin{frame}[t,fragile]{Agregando elementos en una lista vacía}
+\begin{itemize}
+  \item Lista vacía:
+\end{itemize}
+\mode<presentation>{\vspace{1em}}
+\begin{tikzpicture}
+
+
+\node[bloquelibre,minimum width=2.6em] (ant1) {\cppkey{nullptr}};
+\node[bloque, right=0cm of ant1] (valor1) {\cppid{?}};
+\node[bloquelibre,right=0cm of valor1] (sig1) {\cppkey{nullptr}};
+
+\node[bloquelibre,below=0.5cm of ant1] (inicio) { };
+\node[etiqueta,below=0cm of inicio] {\cppid{inicio}};
+\draw[flecha] (inicio) -- (valor1);
+\node[bloquelibre,below=0.5cm of sig1] (fin) { };
+\draw[flecha] (fin) -- (valor1);
+\node[etiqueta,below=0cm of fin] {\cppid{fin}};
+
+\pause
+\node[bloquelibre,left=2cm of ant1] (sig0) {\cppkey{nullptr}};
+\node[bloque, left=0cm of sig0] (valor0) {\cppid{x}};
+\node[bloquelibre,left=0cm of valor0] (ant0) {\cppkey{nullptr}};
+
+\pause
+\node[bloquelibre, right=0cm of valor0,minimum width=2.6em] (sig0b) { };
+\draw[flecha,color=red] (sig0) to[bend right=30] (ant1);
+\pause
+\node[bloquelibre, left=0cm of valor1,minimum width=2.6em] (ant1b) { };
+\draw[flecha,color=red] (ant1) to[bend right=30] (sig0);
+\pause
+\draw[flecha,color=red] (inicio.west) to[bend left=60] (valor0.south);
+\draw[flecha,color=white] (inicio) -- (valor1);
+\end{tikzpicture}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Agregando elementos}
+\begin{itemize}
+  \item Lista \cppid{\{1,2,3\}}
+\end{itemize}
+\begin{tikzpicture}
+\node[bloquelibre] (ant1) {\cppkey{nullptr}};
+\node[bloque, right=0cm of ant1] (valor1) {\cppid{1}};
+\node[bloquelibre,right=0cm of valor1] (sig1) { };
+
+\node[bloquelibre,right=0.5cm of sig1] (ant2) {};
+\node[bloque, right=0cm of ant2] (valor2) {\cppid{2}};
+\node[bloquelibre,right=0cm of valor2] (sig2) {};
+
+\draw[flecha] (sig1) to[bend right=30] (ant2);
+\draw[flecha] (ant2) to[bend right=30] (sig1);
+
+\node[bloquelibre,right=0.5cm of sig2] (ant3) { };
+\node[bloque, right=0cm of ant3] (valor3) {\cppid{3}};
+\node[bloquelibre,right=0cm of valor3] (sig3) { };
+
+\draw[flecha] (sig2) to[bend right=30] (ant3);
+\draw[flecha] (ant3) to[bend right=30] (sig2);
+
+\node[bloquelibre,right=0.5cm of sig3] (ant4) { };
+\node[bloque, right=0cm of ant4] (valor4) {\cppid{?}};
+\node[bloquelibre,right=0cm of valor4] (sig4) {\cppkey{nullptr}};
+
+\draw[flecha] (sig3) to[bend right=30] (ant4);
+\draw[flecha] (ant4) to[bend right=30] (sig3);
+
+\node[bloquelibre,below=0.5cm of ant1] (inicio) { };
+\node[etiqueta,below=0cm of inicio] {\cppid{inicio}};
+\draw[flecha] (inicio) -- (valor1);
+\node[bloquelibre,below=0.5cm of sig4] (fin) { };
+\draw[flecha] (fin) -- (valor4);
+\node[etiqueta,below=0cm of fin] {\cppid{fin}};
+
+\pause
+\node[bloque,above right=1cm and 0cm of sig3] (valor0) {\cppid{x}};
+\node[bloquelibre,left=0cm of valor0,minimum width=2.6em] (ant0) {\cppkey{nullptr}};
+\node[bloquelibre,right=0cm of valor0,minimum width=2.6em] (sig0) {\cppkey{nullptr}};
+
+\pause
+\node[bloquelibre,left=0cm of valor0,minimum width=2.6em] (ant0) {};
+\node[bloquelibre,right=0cm of valor0,minimum width=2.6em] (sig0) {};
+\draw[flecha,color=red] (ant0) -- (valor3);
+\draw[flecha,color=red] (sig0) -- (valor4);
+
+\pause
+\draw[flecha,color=white] (sig3) to[bend right=30] (ant4);
+\draw[flecha,color=white] (ant4) to[bend right=30] (sig3);
+\draw[flecha,color=red] (sig3) -- (valor0);
+\draw[flecha,color=red] (ant4) -- (valor0);
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}[t,fragile]{Agregando elementos}
+\begin{block}{listnum.cpp}
+\begin{lstlisting}
+void listnum::agrega_final(double x) {
+  auto aux = std::make_shared<node>(x);
+  aux->ant_ = fin_->ant_;
+  aux->sig_ = fin_;
+  if (inicio_ == fin_) {
+    inicio_ = aux;
+  } else {
+    fin_->ant_.lock()->sig_ = aux;
+  }
+  fin_->ant_ = aux;
+}
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\subsection{Construcción y copia}
+
+\begin{frame}[t,fragile]{Construcción}
+\begin{block}{listnum.cpp}
+\begin{lstlisting}
+listnum::listnum() 
+    : inicio_{std::make_shared<node>(0)}, 
+      fin_{inicio_} {}
+
+listnum::listnum(int n) 
+    : listnum() // Invocación a constructor por defecto
+{
+  for (int i = 0; i < n; ++i) { agrega_final(0.0); }
+}
+
+listnum::listnum(std::initializer_list<double> l) 
+    : listnum() // Invocación a constructor vacío
+{
+  for (auto x : l) { agrega_final(x); }
+}
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\begin{frame}[t,fragile]{Constructor de copia}
+\begin{block}{listnum.cpp}
+\begin{lstlisting}
+listnum::listnum(const listnum & l) 
+    : listnum() 
+{
+  std::shared_ptr<listnum::node> aux = l.inicio_;
+  while (aux != l.fin_) {
+    agrega_final(aux->valor_);
+    aux = aux->sig_;
+  }
+}
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\begin{frame}[t,fragile]{Operador de asignación de copia}
+\begin{block}{listnum.cpp}
+\begin{lstlisting}
+listnum & listnum::operator=(const listnum & l) {
+  if (this == &l) { return *this; }
+  std::shared_ptr<listnum::node> aux = l.inicio_;
+  while (aux != l.fin_) {
+    agrega_final(aux->valor_);
+    aux = aux->sig_;
+  }
+  return *this;
+}
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\subsection{Tamaño}
+
+\begin{frame}[t,fragile]{Cálculo del tamaño}
+\begin{block}{listnum.cpp}
+\begin{lstlisting}
+int listnum::tamanyo() const noexcept {
+  std::weak_ptr<listnum::node> aux = inicio_;
+  int n = 0;
+  while (aux.lock() != fin_) {
+    n++;
+    aux = aux.lock()->sig_;
+  }
+  return n;
+}
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\subsection{Iteración}
+
+\begin{frame}[t,fragile]{Iteradores}
+\begin{itemize}
+  \item Un \textgood{iterador} representa un mecanismo de acceso a una posición
+        en el contenedor.
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Operaciones}:
+    \begin{itemize}
+      \item \textgood{Desreferenciar}: Acceder al elemento apuntado.
+\begin{lstlisting}
+x = *it;
+*it = x;
+\end{lstlisting}
+
+      \pause
+      \item \textgood{Avanzar}: Avanza a la siguiente posición.
+\begin{lstlisting}
+++it;
+\end{lstlisting}
+
+      \pause
+      \item \textgood{Comparar}: Compara si dos iteradores apuntan a la misma posición
+\begin{lstlisting}
+if (it1 == it2) //...
+if (it1 != it2) //...
+\end{lstlisting}
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Iterador}
+\begin{block}{listnum.cpp}
+\begin{lstlisting}
+class listnum {
+  public:
+    //...
+    class iterador {
+    public:
+      explicit iterador(const std::shared_ptr<node> & p) : actual_{p} {}
+      //...
+    private:
+      std::weak_ptr<node> actual_;
+    };
+    //...
+};
+\end{lstlisting}
+\end{block}
+\begin{itemize}
+  \item Un iterador \textmark{encapsula} un \cppid{weak\_ptr} con una 
+        \textbad{interfaz restringida}.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Iterador}
+\mode<presentation>{\vspace{-.75em}}
+\begin{block}{listnum.cpp}
+\mode<presentation>{\vspace{-.25em}}
+\begin{lstlisting}
+class listnum {
+  public:
+    class iterador {
+    public:
+      //...
+      double & operator*() { return actual_.lock()->valor_; }
+      iterador operator++() {
+        actual_ = actual_.lock()->sig_;
+        return *this;
+      }
+      bool operator==(const iterador & it) const {
+        return actual_.lock() == it.actual_.lock();
+      }
+      bool operator!=(const iterador & it) const {
+        return actual_.lock() != it.actual_.lock();
+      }
+      //...
+    };
+};
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\mode<article>{
+\subsection{Listados completos de \textbf{listnum}}
+
+\begin{frame}[t]{listnum.hpp}
+\lstinputlisting{ejemplos/05-memmgmt/listnum/listnum.hpp}
+\end{frame}
+
+\begin{frame}[t]{listnum.cpp}
+\lstinputlisting{ejemplos/05-memmgmt/listnum/listnum.cpp}
+\end{frame}
+
+}
