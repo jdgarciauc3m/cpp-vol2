@@ -1,0 +1,282 @@
+\section{Herencia}
+
+\subsection{Derivación de clases}
+
+\begin{frame}[t,fragile]{Herencia}
+\begin{itemize}
+  \item La definición de una clase puede especificar que 
+        \textmark{hereda} de otra clase.
+\end{itemize}
+
+\begin{columns}[T]
+
+\column{.1\textwidth}
+\column{.5\textwidth}
+\begin{lstlisting}[escapechar=@]
+class base {
+public:
+  // miembros públicos
+private:
+  // miembros privados
+};
+
+class derivado : @\textbad{public base}@ {
+public:
+  // miembros públicos
+private:
+  // miembros privados
+};
+
+base b; // objeto de tipo base
+derivado d; // Objeto de tipo derivado
+\end{lstlisting}
+
+\column{.5\textwidth}
+\begin{itemize}
+  \item El objeto \cppid{d} tiene todos los miembros del tipo \cppid{base}
+        y todos los miembros del tipo \cppid{derivado}.
+\end{itemize}
+\end{columns}
+
+\end{frame}
+
+\subsection{Aplicación práctica de la herencia}
+
+\begin{frame}[t]{Ejemplo: Figuras geométricas}
+\begin{itemize}
+  \item \textmark{Caso}: Biblioteca de figuras geométricas
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Abstracciones}:
+    \begin{itemize}
+      \mode<presentation>{\vfill\pause}
+      \item \cppid{punto}: 
+        \begin{itemize}
+          \item \textmark{Datos}: Coordenadas \cppid{x} e \cppid{y}.
+          \item \textmark{Operaciones}: Inserción en flujo.
+        \end{itemize}
+      \mode<presentation>{\vfill\pause}
+      \item \cppid{figura}: 
+        \begin{itemize}
+          \item \textmark{Datos}: Un \cppid{punto} que representa la \cppid{posición}.
+          \item \textmark{Operaciones}: \cppid{desplazar}.
+        \end{itemize}
+
+      \mode<presentation>{\vfill\pause}
+      \item \cppid{circulo}: 
+        \begin{itemize}
+          \item \textmark{Datos}: Una \cppid{posición} y un \cppid{radio}.
+          \item \textmark{Operaciones}: \cppid{desplazar}, calcular el \cppid{area}
+                e insertar en un flujo.
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{figura.hpp}
+\lstinputlisting[lastline=17]{ejemplos/06-dynpol/geom/figura.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{figura.hpp}
+\lstinputlisting[firstline=19]{ejemplos/06-dynpol/geom/figura.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{figura.cpp}
+\lstinputlisting{ejemplos/06-dynpol/geom/figura.cpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{circulo.hpp}
+\lstinputlisting{ejemplos/06-dynpol/geom/circulo.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{circulo.cpp}
+\lstinputlisting{ejemplos/06-dynpol/geom/circulo.cpp}
+\end{block}
+\end{frame}
+
+\subsection{Conversiones y herencia}
+
+\begin{frame}[t,fragile]{Conversiones de tipo}
+\begin{itemize}
+  \item Se puede \textmark{copiar} 
+        un \textgood{objeto derivado} en un \textgood{objeto base}.
+    \begin{itemize}
+      \item Solamente se copia la porción de la clase base.
+    \end{itemize}
+\begin{lstlisting}
+circulo c{punto{1.5, 1.5}, 3.0};
+figura f = c;
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede \textmark{pasar por valor} 
+        \textgood{un objeto derivado} donde se espera un \textgood{objeto base}.
+\begin{lstlisting}
+void imprime(figura f);
+circulo c{punto{1.5, 1.5}, 3.0};
+imprime(c);
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Referencias y herencia}
+\begin{itemize}
+
+  \item Se puede \textmark{convertir} 
+        una \textemph{referencia} a una \textgood{clase derivada}
+        a una \textemph{referencias} a una \textgood{clase base}.
+\begin{lstlisting}
+circulo c{punto{1.5, 1.5}, 3.0};
+figura & f = c;
+const figura & g = c;
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede \textmark{pasar por referencia} 
+        \textgood{un objeto derivado} donde se espera un \textgood{objeto base}.
+\begin{lstlisting}
+void mueve_origen(figura & f);
+void imprime(const figura & f);
+circulo c{punto{1.5, 1.5}, 3.0};
+mueve_origen(c);
+imprime(c);
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Punteros y herencia}
+\begin{itemize}
+
+  \item Aplicable también a \textgood{punteros primitivos}.
+\begin{lstlisting}
+circulo c{punto{1.5, 1.5}, 3.0};
+figura * pc = &c;
+const figura * qc = &c;
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Aplicable también a \textgood{punteros elegantes}.
+\begin{lstlisting}
+auto pc = std::make_unique<circulo>(punto{0.5, 0.5}, 3.0);
+std::unique_ptr<figura> pf = std::move(pc);
+auto pd = std::make_unique<circulo>(punto{1.5, 1.5}, 0.5);
+std::unqiue_ptr<const figura> qf = std::move(pd);
+
+auto sc = std::make_shared<circulo>(punto{0.5, 0.5}, 3.0);
+std::shared_ptr<figura> sf = sc;
+std::shared_ptr<const figura> tf = sc;
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\subsection{Funciones miembro}
+
+\begin{frame}[t,fragile]{Añadiendo más clases derivadas}
+\begin{itemize}
+  \item Se puede añadir ahora otra clase para representar un \textmark{rectángulo}.
+\begin{lstlisting}
+class rectangulo : public figura {
+public:
+  rectangulo(punto a, punto b) 
+      : figura{a}, 
+        ancho_{b.x-a.x},
+        alto_{b.y-a.y} {}
+  //...
+private:
+  double ancho_;
+  double alto_;
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Nuevo}: Se podría añadir una operación \cppid{centro()}
+        que devuelva las coordenadas del centro de la figura.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Acceso a miembros}
+\begin{itemize}
+  \item La implementación de una función en una \textgood{clase derivada}
+        \textmark{puede acceder} a cualquier \textemph{miembro público} de la clase base.
+\begin{lstlisting}
+class circulo : public figura {
+public:
+  //...
+  [[nodiscard]] punto centro() const { return posicion(); }
+  //...
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Pero \textbad{no puede acceder} a los \textemph{miembros privados}
+        de la clase base.
+\begin{lstlisting}
+class circulo : public figura {
+public:
+  //...
+  [[nodiscard]] punto centro() const { return posicion_; } // Error. Privado
+  //...
+};
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Implementación por defecto}
+\begin{itemize}
+  \item \textmark{Alternativa}: Definir \cppid{centro()} 
+        en la clase base (\cppid{figura})
+        y se \textmark{hereda} en todas las clases derivadas.
+\begin{lstlisting} 
+class figura {
+public:
+  [[nodiscard]] punto centro() const { return posicion_; } // OK
+  //...
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textbad{Problema}: Hay que redefinir \cppid{centro()}
+        en \cppid{rectangulo} usando la operación \cppid{centro()} de \cppid{figura}.
+\begin{lstlisting}[escapechar=@]
+class rectangulo : public figura {
+public:
+  [[nodiscard]] punto centro() const { // Problema: Recursividad infinita.
+    return @\color{red}centro()@ + desplazamiento{ancho_/2,alto_/2};
+  }
+  //...
+}
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Acceso a miembro de la base}
+\begin{itemize}
+  \item En una \textgood{clase derivada}
+        se puede cualificar el acceso a un miembro de \textgood{la clase base}.
+    \begin{itemize}
+      \item Permite resolver la ambigüedad y seleccionar la versión de la base.
+    \end{itemize}
+\begin{lstlisting}[escapechar=@]
+class rectangulo : public figura {
+public:
+  //...
+  [[nodiscard]] punto centro() const {
+    return @\color{red}figura::centro()@ + desplazamiento{ancho_/2,alto_/2};
+  }
+\end{lstlisting}
+\end{itemize}
+\end{frame}

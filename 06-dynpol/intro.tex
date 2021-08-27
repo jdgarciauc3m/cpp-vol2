@@ -1,0 +1,69 @@
+\section{Introducción}
+
+\begin{frame}[t]{Herencia de clases}
+\begin{itemize}
+  \item La \textgood{herencia} permite definir nuevas clases a partir de clases
+        existentes.
+    \begin{itemize}
+      \item Es un mecanismo de \textmark{reutilización de software}.
+      \item Constituye la base de la \textmark{programación orientada a objetos}
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Dos tipos}:
+    \begin{itemize}
+
+    \mode<presentation>{\vfill\pause}
+    \item \textemph{Herencia de interfaz}:
+          Modela una relación del tipo \textmark{es-un}.
+
+    \mode<presentation>{\vfill\pause}
+    \item \textemph{Herencia de implementación}
+          Permite \textmark{reutilizar} la implementación de una clase en otra.
+
+    \end{itemize}
+\end{itemize}
+\end{frame} 
+
+\begin{frame}[t]{Herencia de interfaz}
+\begin{itemize}
+  \item Representa una relación de \textgood{subtipo} entre dos clases.
+  
+  \mode<presentation>{\vfill\pause}
+  \item La clase \cppid{circulo} es un \textmark{subtipo} de la clase \cppid{figura}.
+    \begin{itemize}
+      \item La clase \cppid{circulo} es una clase derivada de la clase \cppid{figura}.
+      \item La clase \cppid{figura} es una clase base de la clase \cppid{circulo}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item La clase \textgood{derivada} \textmark{hereda} todos los miembros
+        de la clase \textgood{base}.
+    \begin{itemize}
+      \item Todas las operaciones de la clase base se pueden aplicar a 
+            la clase derivada.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Un objeto de la clase \textgood{derivada} debe poderse utilizar
+        en lugares donde se admite un objeto de de la clase \textgood{base}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Herencia de implementación}
+\begin{itemize}
+  \item Permite expresar una relación de herencia que no implica \cppid{subtipo}.
+
+  \mode<presentation>{\vfill\pause}
+  \item Un objeto de la clase \textgood{empleado} 
+        \textmark{tiene} un \textemph{sub-objeto}
+        de la clase \textgood{persona}.
+
+  \mode<presentation>{\vfill\pause}
+  \item Un objeto de la clase \textgood{derivada} no tiene por qué
+        poderse utilizar en lugares donde se admite un objeto de la clase base.
+
+  \mode<presentation>{\vfill\pause}
+  \item A veces se puede sustituir por \textemph{composición}.
+\end{itemize}
+\end{frame}

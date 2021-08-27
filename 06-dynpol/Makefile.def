@@ -1,0 +1,15 @@
+DYNPOL_BASE=06-dynpol
+DYNPOL_PARTS= \
+$(DYNPOL_BASE)/*.tex  \
+ejemplos/$(DYNPOL_BASE)/geom/* \
+metadata.tex \
+license-cc.tex
+
+DYNPOL_PDF=$(DYNPOL_BASE).pdf
+
+FINAL_DYNPOL_PDF=$(FINAL_DIR)/$(DYNPOL_PDF)
+
+DYNPOL_EJ_PARTS=$(DYNPOL_BASE)/ej/*.tex
+DYNPOL_EJ_PDF=$(DYNPOL_BASE)-ej.pdf
+FINAL_DYNPOL_EJ_PDF=$(FINAL_DIR)/$(DYNPOL_EJ_PDF)
+

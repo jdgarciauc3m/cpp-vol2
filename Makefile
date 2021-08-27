@@ -19,6 +19,7 @@ include 02-copia/Makefile.def
 include 03-noexcept/Makefile.def
 include 04-move/Makefile.def
 include 05-memmgmt/Makefile.def
+include 06-dynpol/Makefile.def
 
 ALL_PARTS= \
 $(GUIDE_PARTS) \
@@ -27,6 +28,7 @@ $(COPIA_PARTS) \
 $(NOEXCEPT_PARTS) \
 $(MOVE_PARTS) \
 $(MEMMGMT_PARTS) \
+$(DYNPOL_PARTS) \
 
 ALL_EJ_PARTS= \
 $(CONSTRDESTR_EJ_PARTS) \
@@ -34,6 +36,7 @@ $(COPIA_EJ_PARTS) \
 $(NOEXCEPT_EJ_PARTS) \
 $(MOVE_EJ_PARTS) \
 $(MEMMGMT_EJ_PARTS) \
+$(DYNPOL_EJ_PARTS) \
 
 ALL_SLIDES_FINAL_PDF= \
 $(FINAL_DIR)/$(CONSTRDESTR_PDF) \
@@ -41,6 +44,7 @@ $(FINAL_DIR)/$(COPIA_PDF) \
 $(FINAL_DIR)/$(NOEXCEPT_PDF) \
 $(FINAL_DIR)/$(MOVE_PDF) \
 $(FINAL_DIR)/$(MEMMGMT_PDF) \
+$(FINAL_DIR)/$(DYNPOL_PDF) \
 
 ALL_EJ_FINAL_PDF= \
 $(FINAL_DIR)/$(CONSTRDESTR_EJ_PDF) \
@@ -48,6 +52,7 @@ $(FINAL_DIR)/$(COPIA_EJ_PDF) \
 $(FINAL_DIR)/$(NOEXCEPT_EJ_PDF) \
 $(FINAL_DIR)/$(MOVE_EJ_PDF) \
 $(FINAL_DIR)/$(MEMMGMT_EJ_PDF) \
+$(FINAL_DIR)/$(DYNPOL_EJ_PDF) \
 
 ALL_FINAL_PDF=\
 $(FINAL_DIR) \
@@ -77,3 +82,4 @@ include $(COPIA_BASE)/Makefile.mk
 include $(NOEXCEPT_BASE)/Makefile.mk
 include $(MOVE_BASE)/Makefile.mk
 include $(MEMMGMT_BASE)/Makefile.mk
+include $(DYNPOL_BASE)/Makefile.mk
