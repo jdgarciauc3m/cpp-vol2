@@ -1,0 +1,609 @@
+\section{Polimorfismo dinámico}
+
+\subsection{Funciones virtuales}
+
+\begin{frame}[t,fragile]{Invocación a funciones redefinidas}
+\begin{lstlisting}
+void imprime(const geom::rectangulo & r) {
+  std::cout << "centro: " << r.centro() << "\n"; // rectagulo::centro()
+}
+
+void imprime(const geom::figura & f) {
+  std::cout << "centro: " << f.centro() << "\n"; // figura::centro()
+}
+
+int main() {
+  using namespace geom;
+  rectangulo r{punto{1.5, 1.5}, punto{3.0,3.0}};
+  figura & f = r;
+  imprime(r);
+  imprime(f);
+}
+\end{lstlisting}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}[style=terminal]
+centro: [2.25 , 2.25]
+centro: [1.5 , 1.5]
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[t,fragile]{Vinculación temprana frente a tardía}
+\begin{itemize}
+  \item Todas las funciones miembro tienen por defecto 
+        \textmark{vinculación temprana} (\emph{early binding}).
+    \begin{itemize}
+      \item La función se selecciona en tiempo de compilación dependiendo
+            del tipo estático del objeto.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Se puede especificar que una función tenga
+        \textmark{vinculación tardía} (\emph{late binding}).
+    \begin{itemize}
+      \item La función se selecciona en tiempo de ejecución dependiendo
+            del tipo dinámico del objeto.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item La palabra reservada \cppkey{virtual} permite marcar una función
+        como de \textmark{vinculación tardía}.
+    \begin{itemize}
+      \item Debe usarse en la la declaración, pero no en la definición.
+      \item Si una clase no redefine la versión de la clase base, se hereda ésta.
+      \item Si una clase la redefine se debe indicar con \cppkey{overrride}.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Uso de \textbf{virtual} y \textbf{override}}
+\begin{lstlisting}[escapechar=@]
+class figura {
+public:
+  //...
+  [[nodiscard]] @\color{red}virtual@ punto centro() const { return posicion_; }
+  //...
+};
+@\pause@
+class circulo : public figura {
+  // Sin redefinición. Hereda figura::centro()
+};
+@\pause@
+class rectangulo : public figura {
+public:
+  //...
+  [[nodiscard]] punto centro() const @\color{red}override@ {
+    return figura::centro() + desplazamiento{ancho_/2,alto_/2};
+  }
+  //...
+};
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Invocación a funciones redefinidas}
+\begin{lstlisting}
+void imprime(const geom::rectangulo & r) {
+  std::cout << "centro: " << r.centro() << "\n"; // rectagulo::centro()
+}
+
+void imprime(const geom::figura & f) {
+  std::cout << "centro: " << f.centro() << "\n"; // figura::centro()
+}
+
+int main() {
+  using namespace geom;
+  rectangulo r{punto{1.5, 1.5}, punto{3.0,3.0}};
+  figura & f = r;
+  imprime(r);
+  imprime(f);
+}
+\end{lstlisting}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}[style=terminal]
+centro: [2.25 , 2.25]
+centro: [2.25 , 2.25]
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[t,fragile]{Pérdida del tipo dinámico}
+\begin{itemize}
+  \item La \textmark{vinculación tardía} se consigue a través de 
+        punteros y referencias a objetos.
+\begin{lstlisting}
+  rectangulo r{punto{1.5, 1.5}, punto{3.0,3.0}};
+  figura & f = r;
+  std::cout << f.centro(); // Vinculación tardía
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Si se \textmark{copia} un \textgood{objeto derivado} en un \textgood{objeto base}
+        se copia \textbad{solamente} la parte del objeto \textgood{base}.
+    \begin{itemize}
+      \item Se produce un \textmark{recorte} (\emph{slicing}).
+      \item Se \textbad{pierde} la información sobre el tipo dinámico.
+      \item Toda la invocaciones son de \textmark{vinculación temprana}
+    \end{itemize}
+\begin{lstlisting}
+  rectangulo r{punto{1.5, 1.5}, punto{3.0,3.0}};
+  figura f = r; // Cuidado. Recorte
+  std::cout << f.centro(); // Vinculación temprana
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Virtualizando funciones no miembro}
+\begin{itemize}
+  \item El mecanismo de \textgood{funciones virtuales} solamente se puede
+        aplicar a funcione miembro.
+    \begin{itemize}
+      \item El operador \cppkey{<{}<} es una función global.
+      \item \textbad{Tiene que ser} una \textgood{función virtual} porque
+            el operando izquierdo es un \cppid{std::ostream}.
+    \end{itemize}
+\begin{lstlisting}
+geom::circulo c{punto{1.5,1.5}, 3.0};
+std::ofstream archivo{"grafico.txt"};
+archivo << c; // operator<<(archivo,c);
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Alternativa}:
+    \begin{enumerate}
+      \item Definir una \textmark{función miembro virtual} \cppid{inserta()}
+            que toma como argumento un \cppid{std::ostream}.
+      \item Redefinir \cppid{inserta()} en cada clase de la jerarquía.
+      \item Definir el operador \cppkey{<{}<} \textbad{solamente} para la clase base 
+            invocando a la función virtual.
+    \end{enumerate}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]
+\begin{block}{figura.hpp}
+\begin{lstlisting}
+class figura {
+public:
+  //...
+  virtual void inserta(std::ostream & os) const;
+  //...
+};
+
+std::ostream & operator<<(std::ostream & os, const figura & f);
+\end{lstlisting}
+\end{block}
+
+\mode<presentation>{\vfill\pause}
+\begin{block}{figura.cpp}
+\begin{lstlisting}
+void figura::inserta(std::ostream & os) const {
+  os << "figura: " << posicion_;
+}
+
+std::ostream & operator<<(std::ostream & os, const figura & f) {
+  f.inserta(os); // Vinculación tardía
+  return os;
+}
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\begin{frame}[t,fragile]
+\begin{block}{rectangulo.hpp}
+\begin{lstlisting}
+class rectangulo : public figura {
+public:
+  //...
+  void inserta(std::ostream & os) const override;
+  //...  
+};
+\end{lstlisting}
+\end{block}
+
+\mode<presentation>{\vfill\pause}
+\begin{block}{rectangulo.cpp}
+\begin{lstlisting}
+void rectangulo::inserta(std::ostream & os) const {
+  os << "rectangulo: [";
+  figura::inserta(os); // Vinculación temprana
+  os << "] , " << ancho() << " , " << alto() << " ]";
+}
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\subsection{Funciones virtuales puras}
+
+\begin{frame}[t,fragile]{Funciones virtuales y clase base} 
+\begin{itemize}
+  \item Hay operaciones para las que \textbad{no hay una implementación evidente}
+        de una función virtual en la clase base.
+\begin{lstlisting}[escapechar=@]
+class figura {
+public:
+  [[nodiscard]] virtual double area() const noexcept { return @\color{red}???@; }
+  //...
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Alternativas}:
+    \begin{itemize}
+      \item Lanzar una \textbad{excepción }.
+\begin{lstlisting}
+{ throw logic_error{"area() no implementado}; }
+\end{lstlisting}
+
+      \mode<presentation>{\vfill\pause}
+      \item Tratarlo como un \textbad{error de programación}.
+\begin{lstlisting}
+{ CONTRACT_ASSERT(false); }
+\end{lstlisting}
+
+      \mode<presentation>{\vfill\pause}
+      \item Devolver un \textmark{valor por defecto}.
+\begin{lstlisting}
+{ return 0; }
+\end{lstlisting}
+
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Funciones virtuales puras}
+\begin{itemize}
+  \item \textbad{Problemas} con las alternativas:
+    \begin{itemize}
+      \item Los errores y excepciones se detectan en tiempo de ejecución.
+        \begin{itemize}
+          \item Y solamente si se prueba suficientemente.
+        \end{itemize}
+      \item Un valor por defecto no fuerza a redefinir en todas las subclases.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Una \textgood{función virtual pura} fuerza a que cada subclase
+        redefina dicha función.
+\begin{lstlisting}[escapechar=@]
+class figura {
+public:
+  [[nodiscard]] virtual double area() const noexcept = 0;
+  //...
+};
+
+class triangulo : public figura {
+  // Error si no redefine area() y se instancia un triangulo
+};
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Clases abstractas}
+\begin{itemize}
+  \item Una clase que tiene \textmark{al menos} una \textgood{función virtual pura}
+        es una \textemph{clase abstracta}.
+    \begin{itemize}
+      \item \textbad{No se pueden instanciar} objetos de un \textgood{clase abstracta}.
+\begin{lstlisting}
+figura f{punto{1.0, 2.0}}; // Error clase abstracta
+auto p = make_unique<figura>(punto{3.0,3.0}); // Error clase abstracta
+\end{lstlisting}
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Si una subclase \textmark{no redefine} alguna \textgood{función virtual pura}
+        la subclase sigue siendo una \textbad{clase bastracta}.
+\begin{lstlisting}
+class figura {
+public:
+  virtual void dibuja() = 0;
+};
+
+class figura_colorada : public figura {
+  // Las subclases deben seguir redefiniendo dibuja()
+};
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Colecciones heterogéneas}
+\begin{itemize}
+  \item El \textmark{polimorfismo dinámico} permite el uso de
+        \textmark{colecciones heterogéneas}.
+    \begin{itemize}
+      \item Un contenedor en que distintos elementos son instancias de 
+            distintas subclases.
+    \end{itemize}
+\begin{lstlisting}
+void imprime_areas(const std::vector<std::unique_ptr<figura>> & v) {
+  for (auto & f : v) {
+    std::cout << f << " -- área: " << f.area() "\n";
+  }
+}
+\end{lstlisting}
+  
+  \mode<presentation>{\vfill\pause}
+  \item No se podría definir un \cppid{std::vector<figura>} porque:
+    \begin{itemize}
+      \item \cppid{figura} es una clase abstracta.
+      \item Al insertar elementos en el vector se produciría un \textbad{recorte}.
+      \item Las llamadas función no serían polimórficas.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Destrucción de objetos}
+\begin{itemize}
+  \item Cuando \textbad{acaba} el \textmark{tiempo de vida} de un objeto 
+        se invoca a su \textgood{destructor}.
+\begin{lstlisting}
+void f() {
+  circulo c{punto{1.0,1.0}, 5.0};
+  if (cond) {
+    retctangulo r{punto{-1.0,-1.0}, punto{1.0,1.0}};
+    //...
+  } // Invoca a r.rectangulo::~rectangulo()
+  //...
+} // Invoca a c.circulo::~circulo()
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Objetos con almacenamiento 
+        \textemph{estático} (variables globales) y
+        \textemph{automático} (variables locales).
+    \begin{itemize}
+      \item Se selecciona el \textgood{destructor} 
+            definido por el \textmark{tipo estático} del objeto.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Destrucción y polimorfismo}
+\begin{itemize}
+  \item El \textmark{tiempo de vida} de un objeto alojado 
+        en \textmark{memoria dinámica} \textbad{acaba}:
+    \begin{itemize}
+      \item \textgood{Punteros elegantes}: Al destruir el \textmark{puntero elegante}.
+\begin{lstlisting}
+auto p = std::make_shared<circulo>(punto{1.0,1.0}, 5.0};
+p = nullptr; // Invoca a p->circulo::~circulo() si no hay más refs
+\end{lstlisting}
+      \mode<presentation>{\vfill\pause}
+      \item \textgood{Punteros primitivos}: Al utilizar el operador \cppkey{delete}.
+\begin{lstlisting}
+circulo * p = new circulo{punto{1.0,1.0}, 5.0};
+delete p; // Invoca a p->circulo::~circulo()
+\end{lstlisting}
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Cuando se invoca al \textgood{destructor} de un objeto 
+        a través de un puntero a la \textgood{clase base}:
+    \begin{itemize}
+      \item Si el \textmark{destructor} \textbad{no es virtual} $\Rightarrow$ 
+            se invoca al destructor de la \textgood{clase base} (tipo estático).
+      \item Si el \textmark{destructor} \textgood{es virtual} $\Rightarrow$ 
+            se invoca al destructor de la \textgood{clase derivada} (tipo dinámico).
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Destructor virtual}
+\begin{columns}[T]
+
+\column{.5\textwidth}
+\begin{block}{Destructor no virtual}
+\begin{lstlisting}
+class figura {
+public:
+  virtual double area() const noexcept;
+  ~figura() noexcept;
+  //...
+};
+
+//...
+std::unique_ptr<figura> p = 
+    std::make_unique<circulo>(
+        punto{1.0,1.0},2.0);
+//...
+p.reset(); // p->figura::~figura()
+\end{lstlisting}
+\end{block}
+
+\column{.5\textwidth}
+\begin{block}{Efecto del destructor virtual}
+\end{block}
+\begin{lstlisting}[escapechar=@]
+class figura {
+public:
+  virtual double area() const noexcept;
+  @\color{red}virtual@ ~figura() noexcept;
+  //...
+};
+
+//...
+std::unique_ptr<figura> p = 
+    std::make_unique<circulo>(
+        punto{1.0,1.0},2.0);
+//...
+p.reset(); // p->circulo::~circulo()
+\end{lstlisting}
+
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Destructor virtual}
+\begin{itemize}
+  \item Si una clase tiene \textmark{al menos} una \textgood{función virtual}
+        se \textmark{recomienda} hacer su \textemph{destructor virtual}.
+
+  \mode<presentation>{\vfill\pause}
+  \item El \textgood{destructor} generado por defecto \textbad{no es} \textemph{virtual}.
+\begin{lstlisting}
+class figura {
+public:
+  virtual double area() const noexcept;
+  // ~figura() noexcept {} <- Generado por defecto
+  virtual ~figura() noexcept {}
+  //...
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Si no se va hacer nada en el \textmark{cuerpo del destructor},
+        se puede \textemph{declarar el destructor} con \textgood{implementación por defecto}.
+\begin{lstlisting}
+class figura {
+public:
+  //...
+  virtual ~figura() noexcept = default;
+  //...
+
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+
+\subsection{Funciones virtuales finales}
+
+\begin{frame}[t,fragile]{Funciones finales}
+\begin{itemize}
+  \item Una \textemph{función virtual} se puede marcar en una clase
+        como una función \textemph{final}.
+    \begin{itemize}
+      \item Indica que \textbad{ninguna subclase} puede \textmark{redefinir} la función.
+    \end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+class figura {
+public:
+  [[nodiscard]] virtual bool es_simple() const = 0;
+  //...
+};
+class figura_simple : public figura {
+public:
+  [[nodiscard]] virtual bool es_simple() const final { return true; }
+  //...
+};
+class circulo : public figura_simple {
+public:
+  [[nodiscard]] virtual bool es_simple() const { return false; } // Error
+  //...
+};
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Clases finales}
+\begin{itemize}
+  \item Una \textgood{clase} se puede marcar como \cppkey{final}.
+    \begin{itemize}
+      \item Convierte todas sus \textgood{funciones miembro} en \textemph{finales}.
+    \end{itemize}
+\begin{lstlisting}
+class circulo final : public figura_simple { /*...*/ };
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Efecto adicional}: \textbad{No se puede heredar} de una \textemph{clase final}.
+\begin{lstlisting}
+class circulo_coloreado : public circulo { // Error: circulo es final
+//...
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textmark{Impacto}:
+    \begin{itemize}
+      \item Puede permitir algunas \textgood{optimizaciones}.
+      \item Establece \textbad{restricciones} de diseño.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\subsection{Tipos de retorno covariantes}
+
+\begin{frame}[t,fragile]{Variaciones en funciones virtuales}
+\begin{itemize}
+  \item Una \textmark{redefinición} de una \textemph{función virtual} debe utilizar 
+        exactamente los \textmark{mismos tipos} para los \textgood{parámetros}.
+    \begin{itemize}
+      \item Pero puede haber variaciones en el tipo de retorno.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Si el tipo de retorno en la función base es \cppid{T\&} o \cppid{T*}:
+    \begin{itemize}
+      \item El tipo de retorno en la función redefinida puede ser \cppid{D\&} o \cppid{D*}.
+      \item \cppid{D} es una clase derivada públicamente de \cppid{T}.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item Si el tipo de retorno en la función base es \cppid{T}:
+    \begin{itemize}
+      \item El tipo de retorno en la función redefinida debe ser \cppid{T}.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Tipos covariantes y copia}
+\begin{itemize}
+  \item Un \textgood{constructor} \textbad{no puede ser} \textemph{virtual}.
+    \begin{itemize}
+      \item Pero se puede utilizar una \textemph{función virtual}
+            para crear copias.
+    \end{itemize}
+\begin{lstlisting}
+class figura {
+public:
+  [[nodiscard]] virtual figura * clona() const = 0;
+  //... 
+};
+
+class circulo {
+public:
+  [[nodiscard]] circulo * clona() const override {
+    return new circulo{*this};
+  }
+  //...
+};
+//...
+auto p = f->clona(); // p es figura*
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Tipos covariantes y punteros elegantes}
+\begin{itemize}
+  \item La regla de los \textgood{tipos covariantes} \textmark{parece forzar}
+        al uso de \textemph{punteros primitivos}.
+
+\begin{lstlisting}
+class figura {
+public:
+  [[nodiscard]] std::unique_ptr<figura> clona() const {
+    return std::unique_ptr<figura>{clona_impl()};
+  }
+private:
+  [[nodiscard]] virtual figura * clona_impl() const = 0;
+};
+
+class circulo {
+private:
+  [[nodiscard]] circulo * clona_impl() const override {
+    return new circulo{*this};
+  }
+};
+//...
+auto p = f->clona(); // p es std::unique_ptr<figura>
+\end{lstlisting}
+\end{itemize}
+\end{frame}

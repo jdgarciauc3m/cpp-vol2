@@ -6,18 +6,33 @@ TEST(test_circulo, constr) // NOLINT
 {
   using namespace geom;
   circulo c{punto{2.5, 1.5}, 3.0};
-  EXPECT_EQ((punto{2.5,1.5}), c.posicion());
-  EXPECT_EQ(2.5, c.x());
-  EXPECT_EQ(1.5, c.y());
+  EXPECT_EQ((punto{2.5,1.5}), c.centro());
   EXPECT_EQ(3.0, c.radio());
 }
 
-TEST(test_circulo, move) // NOLINT
+TEST(test_circulo, clonacion) // NOLINT
+{
+  using namespace geom;
+  circulo c{punto{1.0,1.0}, 3.0};
+  figura & f = c;
+  auto d = f.clona();
+  EXPECT_EQ((punto{1.0,1.0}), d->centro());
+}
+
+TEST(test_circulo, desplaza) // NOLINT
 {
   using namespace geom;
   circulo c{punto{2.5, 2.5}, 3.0};
-  c.desplaza(1.0, -1.0);
-  EXPECT_EQ((punto{3.5,1.5}), c.posicion());
+  c.desplaza(desplazamiento{1.0, -1.0});
+  EXPECT_EQ((punto{3.5,1.5}), c.centro());
+}
+
+TEST(test_circulo, desplaza_diagonal) // NOLINT
+{
+  using namespace geom;
+  circulo c{punto{2.5, 2.5}, 3.0};
+  c.desplaza(1.0);
+  EXPECT_EQ((punto{3.5,3.5}), c.centro());
 }
 
 TEST(test_circulo, area) // NOLINT

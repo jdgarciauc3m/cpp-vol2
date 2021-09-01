@@ -6,15 +6,27 @@ namespace geom {
 
   class circulo : public figura {
   public:
-    circulo(punto centro, double radio) : figura{centro}, radio_{radio} {}
+    circulo(geom::punto centro, double radio) noexcept
+        : figura{centro},
+          radio_{radio} {}
 
-    [[nodiscard]] double radio() const { return radio_; }
-    [[nodiscard]] double area() const;
+    [[nodiscard]] double radio() const noexcept { return radio_; }
+    [[nodiscard]] double area() const noexcept override;
+
+    using figura::desplaza;
+    void desplaza(double delta) noexcept { figura::desplaza({delta, delta}); }
+
+    void refleja_x() noexcept override { posicion_.x = -posicion_.x; }
+    void inserta(std::ostream & os) const override;
+
+  private:
+    [[nodiscard]] circulo * clona_impl() const override {
+      return new circulo{*this};
+    }
 
   private:
     double radio_;
   };
-  std::ostream & operator<<(std::ostream & os, const circulo & c);
 
 }// namespace geom
 

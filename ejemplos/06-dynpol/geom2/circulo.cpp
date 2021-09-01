@@ -1,18 +1,17 @@
 #include "circulo.hpp"
-#include "punto.hpp"
 #include <numbers>
 #include <ostream>
 
 namespace geom {
 
-  double circulo::area() const {
+  double circulo::area() const noexcept {
     return std::numbers::pi_v<double> * radio_ * radio_;
   }
 
-  std::ostream & operator<<(std::ostream & os, const circulo & c) {
+  void circulo::inserta(std::ostream & os) const {
     os << "circulo: [";
-    os << static_cast<const figura&>(c);
-    return os << " , " << c.radio() << "]";
+    figura::inserta(os);
+    os << " , " << radio() << "]";
   }
 
 }// namespace geom

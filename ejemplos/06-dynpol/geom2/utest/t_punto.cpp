@@ -5,9 +5,11 @@
 TEST(test_punto, comparacion_igual) // NOLINT
 {
   using namespace geom;
-  punto p{1.0, 2.0}, q{1.0, 2.0}, r{1.0,3.0};
-  EXPECT_EQ(p,q);
-  EXPECT_NE(p,r);
+  punto p{1.0, 2.0};
+  punto q{1.0, 2.0};
+  punto r{1.0,3.0};
+  EXPECT_TRUE(p==q);
+  EXPECT_TRUE(p!=r);
 }
 
 TEST(test_punto, suma) // NOLINT

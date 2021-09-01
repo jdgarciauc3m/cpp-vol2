@@ -4,22 +4,39 @@
 #include "punto.hpp"
 
 #include <iosfwd>
+#include <mincontracts/mincontracts.hpp>
+#include <memory>
 
 namespace geom {
 
   class figura {
   public:
-    explicit figura(punto p) : posicion_{p} {}
+    explicit figura(punto p) noexcept : posicion_{p} {}
+  protected:
+    figura(const figura &) noexcept = default;
+    figura & operator=(const figura &) noexcept = default;
+    figura(figura &&) noexcept = default;
+    figura & operator=(figura &&) noexcept = default;
+  public:
+    virtual ~figura() = default;
 
-    [[nodiscard]] punto posicion() const { return posicion_; }
-    [[nodiscard]] punto centro() const { return posicion_; }
-    [[nodiscard]] double x() const { return posicion_.x; }
-    [[nodiscard]] double y() const { return posicion_.y; }
+    [[nodiscard]] std::unique_ptr<figura> clona() const {
+      return std::unique_ptr<figura>{clona_impl()};
+    }
 
-    void desplaza(double delta_x, double delta_y) {
-      posicion_ += desplazamiento{delta_x,delta_y}; }
+    [[nodiscard]] virtual punto centro() const noexcept { return posicion_; }
+
+    [[nodiscard]] virtual double area() const noexcept = 0;
+
+    void desplaza(desplazamiento d) noexcept { posicion_ += d; }
+    virtual void refleja_x() noexcept = 0;
+
+    virtual void inserta(std::ostream & os) const;
 
   private:
+    [[nodiscard]] virtual figura * clona_impl() const = 0;
+
+  protected:
     punto posicion_;
   };
 

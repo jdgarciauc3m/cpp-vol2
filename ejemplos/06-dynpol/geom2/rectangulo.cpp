@@ -2,9 +2,10 @@
 
 namespace geom {
 
-  std::ostream & operator<<(std::ostream & os, const rectangulo & r) {
+  void rectangulo::inserta(std::ostream & os) const {
     os << "rectangulo: [";
-    os << static_cast<const figura&>(r);
-    return os << "] , " << r.ancho() << " , " << r.alto() << " ]";
+    figura::inserta(os);
+    os << "] , " << ancho() << " , " << alto() << " ]";
   }
+
 }
