@@ -73,6 +73,28 @@ derivado d; // Objeto de tipo derivado
 \end{itemize}
 \end{frame}
 
+\mode<presentation>{
+
+\begin{frame}[t]
+\begin{block}{punto.hpp}
+\lstinputlisting[lastline=20]{ejemplos/06-dynpol/geom/punto.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{punto.hpp}
+\lstinputlisting[firstline=22]{ejemplos/06-dynpol/geom/punto.hpp}
+\end{block}
+\end{frame}
+
+}
+
+\mode<article>{
+\begin{block}{punto.hpp}
+\lstinputlisting{ejemplos/06-dynpol/geom/punto.hpp}
+\end{block}
+}
+
 \begin{frame}[t]
 \begin{block}{figura.hpp}
 \lstinputlisting[lastline=17]{ejemplos/06-dynpol/geom/figura.hpp}
@@ -91,11 +113,31 @@ derivado d; // Objeto de tipo derivado
 \end{block}
 \end{frame}
 
+\mode<presentation>{
+
 \begin{frame}[t]
+\begin{block}{circulo.hpp}
+\lstinputlisting[lastline=19]{ejemplos/06-dynpol/geom/circulo.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{circulo.hpp}
+\lstinputlisting[firstline=20]{ejemplos/06-dynpol/geom/circulo.hpp}
+\end{block}
+\end{frame}
+
+}
+
+\mode<article>{
+\begin{frame}[t]
+
 \begin{block}{circulo.hpp}
 \lstinputlisting{ejemplos/06-dynpol/geom/circulo.hpp}
 \end{block}
 \end{frame}
+
+}
 
 \begin{frame}[t]
 \begin{block}{circulo.cpp}
@@ -278,5 +320,275 @@ public:
     return @\color{red}figura::centro()@ + desplazamiento{ancho_/2,alto_/2};
   }
 \end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\subsection{Herencia y sobrecarga}
+
+\begin{frame}[t,fragile]{Sobrecarga en clase derivada}
+\begin{itemize}
+  \item La \textgood{sobrecarga de funciones} \textbad{no actúa} sobre funciones miembro 
+        de \textmark{distintas clases}.
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+class figura {
+public:
+  void desplaza(desplazamiento d) noexcept { posicion_ += d; }
+  //...
+};
+
+class circulo : public figura {
+public:
+  void desplaza(double delta) noexcept { figura::desplaza({delta,delta}); }
+  //...
+};
+
+//...
+circulo c{punto{1.0,1.0}, 2.0};
+c.desplaza(3.0); //OK
+c.desplaza(desplazamiento{2.0,3.0}); // Error: no puede covertir a double
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Problemas \emph{silenciosos}}
+\begin{itemize}
+  \item El conflicto entre \textmark{sobrecarga} y \textmark{herencia}
+        puede dar lugar a \textbad{errores} difíciles de detectar.
+\begin{lstlisting}
+class A {
+public:
+  void f(int x) { std::cout << "int\n"; }
+};
+
+class B : public A {
+public:
+  void f(double x) { std::cout << "double\n"; }
+};
+
+B b;
+b.f(1.0); // Imprime double
+b.f(1); // Sorpresa: Imprime double
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Herencia de funciones sobrecargadas}
+\begin{itemize}
+  \item Se puede utilizar una \textgood{declaración de uso} para \textmark{añadir}
+        todas las funciones sobrecargadas de una clase base.
+
+\end{itemize}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+class figura {
+public:
+  void desplaza(desplazamiento d) noexcept { posicion_ += d; }
+  //...
+};
+
+class circulo : public figura {
+public:
+  using figura::desplaza;
+  void desplaza(double delta) noexcept { figura::desplaza({delta,delta}); }
+  //...
+};
+
+//...
+circulo c{punto{1.0,1.0}, 2.0};
+c.desplaza(3.0); //OK
+c.desplaza(desplazamiento{2.0,3.0}); // OK
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Herencia de constructores}
+\begin{itemize}
+  \item Los constructores de la \textgood{clase base} no están automáticamente
+        disponibles en la \textgood{clase derivada}.
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+class diagrama : public std::vector<std::unique_ptr<figura>> {
+public:
+  void desplaza(desplazamiento d) {
+    for (auto & x : *this) { if (x) { x->desplaza(d); } }
+  }
+};
+//...
+diagrama d(3); // No hay constructor
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Normalmente hay \textgood{buenas razones}:
+    \begin{itemize}
+      \item Si hay datos miembros en la clase derivada hay que iniciarlos.
+      \item Postcondiciones adicionales.
+    \end{itemize}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Declaración de uso y constructores}
+\begin{itemize}
+  \item Se pueden heredar todos los constructores con una \textgood{declaración de uso}.
+\begin{lstlisting}
+class diagrama : public std::vector<std::unique_ptr<figura>> {
+public:
+  using std::vector<std::unique_ptr<figura>>::vector; 
+};
+//...
+diagrama d(3); // OK
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\subsection{Control de acceso}
+
+\begin{frame}[t,fragile]{Niveles de visibilidad}
+\begin{itemize}
+  \item Aparece un tercer nivel de visibilidad en las clases además de
+        \cppkey{public} y \cppkey{private} $\Rightarrow$ \cppkey{protected}.
+    \begin{itemize}
+      \item \cppkey{private}:
+            Accesible por funciones miembro de la propia clase.
+      \item \cppkey{protected}:
+            Accesible por funciones miembro de la propia clase y de clases derivadas.
+      \item \cppkey{public}:
+            Accesible por funciones miembro de la propia clase, clases derivadas y
+            por usuarios de la clase.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item El acceso \textemph{protegido} permite definir una intefaz
+        solamente utilizable por las clases derivadas.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Miembros protegidos}
+\begin{itemize}
+  \item Un miembro se hace \textemph{protegido} si se necesita usar
+        desde una clase derivada pero no se desea exponer
+        públicamente.
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}[escapechar=@]
+class figura {
+//...
+@\color{red}protected@:
+  double posicion_;
+};
+
+class rectangulo {
+public:
+  void refleja_x() noexcept { @\color{red}posicion\_.x@ = -@\color{red}posicion\_.x@ - ancho_; }
+private:
+  double ancho_, double alto_;
+};
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Herencia pública}
+\begin{itemize}
+  \item Relaciones del tipo \textmark{es-un}.
+\end{itemize}
+
+\mode<presentation>{\vspace{-1em}}
+\begin{columns}[T]
+\column{.6\textwidth}
+\begin{lstlisting}
+class figura {
+public:
+  void desplaza(desplazamiento d) noexcept;
+protected:
+  double posicion_;
+};
+\end{lstlisting}
+\column{.5\textwidth}
+\begin{lstlisting}
+class circulo : public figura { 
+public:
+  punto centro() const noexcept;
+};
+\end{lstlisting}
+\end{columns}
+
+  \mode<presentation>{\vspace{-1em}}
+  \mode<presentation>{\vfill\pause}
+\begin{itemize}
+  \item Los miembros públicos de la base 
+        son accesibles por cualquier función
+\begin{lstlisting}
+circulo c{punto{1.0,1.0}, 3.0};
+c.desplaza(); // OK. Accesible siempre.
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Los miembros protegidos de la base 
+        son accesibles por los miembros de la clase derivada.
+\begin{lstlisting}
+punto circulo::centro() const noexcept { return posicion_; } // OK
+circulo c{punto{1.0,1.0}, 3.0};
+auto c = c.posicion_; // Error. No accesible.
+\end{lstlisting}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Herencia privada}
+\begin{itemize}
+  \item La clase base es un detalle de implementación de la derivada.
+    \begin{itemize}
+      \item Útil para restringir la interfaz de una clase.
+    \end{itemize}
+\begin{lstlisting}
+class diagrama : private std::vector<std::shared_ptr<figura>> {
+public:
+  using std::vector<std::shared_ptr<figura>>::vector;
+  void agrega_circulo(punto c, double r); 
+  void agrega_rectangulo(punto p1, punto p2);
+  void desplaza(desplazamiento d);
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Los miembros públicos y protegidos de la base
+        son accesibles por los miembros de la clase derivada.
+\begin{lstlisting}
+void diagrama::agrega_circulo(punto c, double r) {
+  push_back(std::make_unique<circulo>(c, r));
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Herencia protegida}
+\begin{itemize}
+  \item La clase base es un detalle de implementación 
+        de la clase derivada.
+    \begin{itemize}
+      \item La clase derivada es una clase intermedia en la jerarquía.
+    \end{itemize}
+\begin{lstlisting}
+class diagrama : protected std::vector<std::shared_ptr<figura>> {/*...*/  };
+
+class diagrama_anotado: public diagrama { 
+public:
+  void agrega_anotacion(std::string texto);
+};
+\end{lstlisting}
+
+  \mode<presentation>{\vfill\pause}
+  \item Los miembros públicos y protegidos de la base
+        son accesibles por los miembros de la clase derivada
+        y sus descendientes.
+\begin{lstlisting}
+void agrega_anotacion(const std::string & texto) {
+  push_back(std::make_unique<anotacion>(texto));
+}
+\end{lstlisting}
+
 \end{itemize}
 \end{frame}

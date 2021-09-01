@@ -1,10 +1,11 @@
 #include "circulo.hpp"
+#include "figura.hpp"
 #include <numbers>
 #include <ostream>
 
 namespace geom {
 
-  double circulo::area() const {
+  double circulo::area() const noexcept {
     return std::numbers::pi_v<double> * radio_ * radio_;
   }
 

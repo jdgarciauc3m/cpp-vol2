@@ -1,4 +1,5 @@
 #include "circulo.hpp"
+#include "figura.hpp"
 
 #include <gtest/gtest.h>
 
@@ -16,7 +17,7 @@ TEST(test_circulo, move) // NOLINT
 {
   using namespace geom;
   circulo c{punto{2.5, 2.5}, 3.0};
-  c.desplaza(1.0, -1.0);
+  c.desplaza(desplazamiento{1.0, -1.0});
   EXPECT_EQ((punto{3.5,1.5}), c.posicion());
 }
 

@@ -7,10 +7,12 @@ namespace geom {
 
   class circulo : public figura {
   public:
-    circulo(punto p, double r) : figura{p}, radio_{r} {}
+    circulo(punto centro, double radio) noexcept
+        : figura{centro},
+          radio_{radio} {}
 
-    [[nodiscard]] double radio() const { return radio_; }
-    [[nodiscard]] double area() const;
+    [[nodiscard]] double radio() const noexcept { return radio_; }
+    [[nodiscard]] double area() const noexcept;
 
   private:
     double radio_;

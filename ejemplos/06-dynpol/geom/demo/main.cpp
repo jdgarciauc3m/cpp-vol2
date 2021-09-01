@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "circulo.hpp"
+#include "figura.hpp"
 
 void imprime_figura(geom::figura f) {
   std::cout << f << "\n";
