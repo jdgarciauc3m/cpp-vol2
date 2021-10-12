@@ -84,6 +84,7 @@ auto q = p;
 \draw[flecha] (qobj) -- (pref);
 \end{tikzpicture}
 
+\pause
 \column{.5\textwidth}
 
 \begin{lstlisting}
@@ -95,7 +96,7 @@ p=nullptr;
 \node[bloque] (pobj) {\cppkey{nullptr}};
 \node[etiqueta, left=0cm of pobj] {\cppid{p}};
 
-\node[bloque, right=0.5cm of pobj] (pref) {0};
+\node[bloque, right=0.5cm of pobj] (pref) {1};
 \node[etiqueta, above=0cm of pref] {\cppid{ref}};
 \node[bloque, right=0cm of pref] (pptr) { };
 \node[etiqueta, above=0cm of pptr] {\cppid{ptr}};
@@ -110,7 +111,6 @@ p=nullptr;
 
 
 \mode<presentation>{\vspace{1em}\vfill\pause}
-\mode<presentation>{\vfill\pause}
 \begin{lstlisting}
 } // Destrucción de q
 \end{lstlisting}
@@ -120,7 +120,7 @@ p=nullptr;
 \node[bloque] (pobj) {\cppkey{nullptr}};
 \node[etiqueta, left=0cm of pobj] {\cppid{p}};
 
-\node[bloque, right=0.5cm of pobj] (pref) {1};
+\node[bloque, right=0.5cm of pobj] (pref) {0};
 \node[etiqueta, above=0cm of pref] {\cppid{ref}};
 \node[bloque, right=0cm of pref] (pptr) { };
 \node[etiqueta, above=0cm of pptr] {\cppid{ptr}};
