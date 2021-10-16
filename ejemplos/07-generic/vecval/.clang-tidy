@@ -1,0 +1,5 @@
+Checks: '*,-llvm-*,-llvmlibc-*,-modernize-use-trailing-return-type,-fuchsia-*,
+-hicpp-*,-modernize-*,-cppcoreguidelines-avoid-c-arrays'
+CheckOptions:
+  - key: readability-identifier-length.IgnoredParameterNames
+    value: ^[in]$
