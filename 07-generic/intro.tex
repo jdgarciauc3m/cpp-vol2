@@ -1,0 +1,93 @@
+\section{Introducción}
+
+\subsection{Tipos genéricos}
+
+\begin{frame}[fragile]{Tipos genéricos definidos por el usuario}
+\vspace{-0.75em}
+\begin{itemize}
+  \item Una \textmark{plantilla} permite usar un tipo de datos que está
+        parametrizado por otro tipo de datos.
+\begin{lstlisting}
+vector<double> v1;
+vector<string> v2;
+vector<fecha> v3;
+vector<vector<string>> v4
+\end{lstlisting}
+\mode<presentation>{\pause}
+  \item Una plantilla requiere que todas las definiciones sean visible en
+        tiempo de compilación.
+    \begin{itemize}
+      \item Efecto práctico: Todas las definiciones en cabecera
+    \end{itemize}
+\end{itemize}
+\begin{lstlisting}
+template <class T>
+class vector {
+  // ...
+};
+
+template <typename U>
+class lista {
+  // ...
+};
+\end{lstlisting}
+\end{frame}
+
+\subsection{Un vector genérico}
+
+\mode<presentation>{
+
+\begin{frame}[t]
+\begin{block}{vector.hpp}
+\lstinputlisting[lastline=21]{ejemplos/07-generic/vecval/vecval.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{vector.hpp}
+\lstinputlisting[firstline=23,lastline=37]{ejemplos/07-generic/vecval/vecval.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{vector.hpp}
+\lstinputlisting[firstline=39,lastline=52]{ejemplos/07-generic/vecval/vecval.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{vector.hpp}
+\lstinputlisting[firstline=54,lastline=71]{ejemplos/07-generic/vecval/vecval.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{vector.hpp}
+\lstinputlisting[firstline=73,lastline=89]{ejemplos/07-generic/vecval/vecval.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\begin{block}{vector.hpp}
+\lstinputlisting[firstline=91]{ejemplos/07-generic/vecval/vecval.hpp}
+\end{block}
+\end{frame}
+
+}
+
+\mode<article>{
+
+\begin{frame}
+\begin{block}{vector.hpp}
+\lstinputlisting{ejemplos/07-generic/vecval/vecval.hpp}
+\end{block}
+\end{frame}
+
+}
+
+\begin{frame}
+\begin{block}{main.cpp}
+\lstinputlisting{ejemplos/07-generic/vecval/main.cpp}
+\end{block}
+\end{frame}
+

@@ -1,0 +1,449 @@
+\section{Expresiones lambda}
+
+\subsection{¿Qué es una expresión lambda?}
+
+\defverbatim[colored]\lambdaeja{
+\begin{lstlisting}
+class menor_abs {
+  bool operator()(int x, int y) { return abs(x) < abs(y); }
+};
+
+//...
+std::vector<int> v = { 100, -1, 40, -70 };
+std::sort(v.begin(), v.end(), menor_abs());
+\end{lstlisting}
+}
+\defverbatim[colored]\lambdaejb{
+\begin{lstlisting}
+std::vector<int> v = { 100, -1, 40, -70 };
+std::sort(v.begin(), v.end(), 
+          [](int x, int y) { return abs(x) < abs(y); });
+\end{lstlisting}}
+\begin{frame}
+  \begin{itemize}
+    \item Una expresión lambda:
+      \begin{itemize}
+        \item Es un mecanismo para especificar un objeto función.
+        \item Permite pasar una función simple a otro contexto.
+      \end{itemize}
+    \item \pause C++03:
+  \end{itemize}
+\lambdaeja
+  \begin{itemize}
+    \item \pause C++11:
+  \end{itemize}
+\lambdaejb
+\end{frame}
+
+\defverbatim[colored]\lambdapartes{
+\begin{lstlisting}
+std::sort(v.begin(), v.end(), 
+  [](int x, int y) 
+  { 
+    return abs(x) < abs(y); 
+  }
+);
+\end{lstlisting}}
+\begin{frame}{Partes de una lambda}
+\lambdapartes
+  \begin{itemize}
+    \item \pause \textmark{Introductor de lambda}: Indica el comienzo de una expresión lambda.
+    \item \pause \textmark{Parámetros de lambda}: Equivalente a parámetros de una función.
+    \item \pause \textmark{Cuerpo de la función lambda}: Equivalente a cuerpo de una función.
+    \item \pause \textmark{Tipo de retorno}: Se puede deducir automáticamente.
+  \end{itemize}
+\end{frame}
+
+\subsection{Capturas}
+
+\begin{frame}[t]{A qué variables puede acceder una lambda}
+  \begin{itemize}
+    \item Acceso por defecto:
+      \begin{itemize}
+        \item Variables globales.
+        \item Variables estáticas locales.
+      \end{itemize}
+    \mode<presentation>{\vfill\pause}
+    \item Acceso que necesita declaración explícita:
+      \begin{itemize}
+        \item Captura por defecto: Puede ser por referencia o valor.
+        \item Captura explícita de variable: Puede ser por referencia o valor.
+        \item Captura de \cppkey{this}.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Acceso por defecto}
+\begin{lstlisting}[escapechar=@]
+double s { 0.0 };
+
+void f(int i) {
+  char c {'a'};
+  static int n {};
+
+  vector<int> v { 1, 2, 3};
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << x; }); // OK@\pause@
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << x << s; }); // OK. s es global@\pause@
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << x << i; }); // Error. i no accesible@\pause@
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << x << c; }); // Error. c no accesible@\pause@
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << x << n; }); // OK. n es estático
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Captura explícita por valor}
+  \begin{itemize}
+    \item Se enumeran los nombres de las variables en la lista de captura.
+  \end{itemize}
+\pause
+\begin{lstlisting}[escapechar=@]
+void imprime_rango(std::vector<int> & v, int minv, int maxv) {
+  std::for_each(v.begin(), v.end(),
+    [minv,maxv](int x) { 
+       if (x > maxv) return;
+       if (x < minv) return;
+       cout << x << endl;
+  });
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Captura ímplicita por valor}
+  \begin{itemize}
+    \item Se indica con \cppid{=} en la lista de captura.
+    \item Se capturan por valor todos los objetos en el ámbito contenedor.
+  \end{itemize}
+\pause
+\begin{lstlisting}[escapechar=@]
+void imprime_rango(std::vector<int> & v, int minv, int maxv) {
+  std::for_each(v.begin(), v.end(),
+    [=](int x) { 
+       if (x > maxv) return;
+       if (x < minv) return;
+       cout << x << endl;
+  });
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Captura por valor}
+  \begin{itemize}
+    \item ¿Se copian todos los valores al objeto captura?
+      \begin{itemize}
+        \item \pause No. Solamente los que efectivamente se usan dentro de la lambda.
+        \item La captura solamente indica accesibilidad.
+      \end{itemize}
+  \end{itemize}
+\pause
+\begin{lstlisting}[escapechar=@]
+void imprime_rango(std::vector<int> & v, int minv, int maxv) {
+  int w[512];
+  std::for_each(v.begin(), v.end(),
+    [=](int x) { // Atención: w no se copia.
+       if (x > maxv) return;
+       if (x < minv) return;
+       cout << x << endl;
+  });
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Captura explícita por referencia}
+  \begin{itemize}
+    \item Se enumeran los nombres de las variables en la lista de captura, anteponiéndoles \cppid{\&}.
+    \item Se pueden combinar capturas por valor y referencia.
+    \item No existe la idea de captura por referencia constante.
+  \end{itemize}
+\pause
+\begin{lstlisting}[escapechar=@]
+int suma_rango(std::vector<int> & v, int minv, int maxv) {
+  int suma { 0 };
+  std::for_each(v.begin(), v.end(),
+    [&suma, minv, maxv](int x) {
+       if (x > maxv) return;
+       if (x < minv) return;
+       suma += x;
+  });
+  return suma;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Captura implícita por referencia}
+  \begin{itemize}
+    \item Se indica con \cppid{\&} en la lista de captura.
+    \item Se capturan por referencia todos los objetos en el ámbito contenedor.
+  \end{itemize}
+\pause
+\begin{lstlisting}[escapechar=@]
+int suma_rango(std::vector<int> & v, int minv, int maxv) {
+  int suma { 0 };
+  std::for_each(v.begin(), v.end(),
+    [&](int x) {
+       if (x > maxv) return;
+       if (x < minv) return;
+       suma += x;
+  });
+  return suma;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Combinación de capturas}
+  \begin{itemize}
+    \item Se puede indicar una captura implícita seguida de capturas explícitas.
+  \end{itemize}
+\pause
+\begin{lstlisting}
+int suma_rango(std::vector<int> & v, int minv, int maxv) {
+  int suma { 0 };
+  std::for_each(v.begin(), v.end(),
+    [=,&suma](int x) {
+       if (x > maxv) return;
+       if (x < minv) return;
+       suma += x;
+  });
+  return suma;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Acceso a miembros desde una lambda}
+  \begin{itemize}
+    \item Desde una lambda en una función miembro no se pueden capturar
+    explícitamente datos miembro.
+  \end{itemize}
+\begin{lstlisting}
+struct X {
+  std::vector<int> v;
+  int minv;
+  int maxv;
+  int suma_rango() {
+    int suma { 0 };
+    std::for_each(v.begin(), v.end(), 
+      [minv,maxv,&suma](int x) { // Error
+         if (x > maxv) return;
+         if (x < minv) return;
+         suma += x;
+    });
+    return suma;
+  }
+};
+\end{lstlisting}
+\end{frame}
+ 
+\defverbatim[colored]\lambdathisuno{
+\begin{lstlisting}
+struct X {
+  std::vector<int> v;
+  int minv;
+  int maxv;
+  int suma_rango() {
+    int suma { 0 };
+    std::for_each(v.begin(), v.end(), 
+      [=,&suma](int x) {
+         if (x > maxv) return;
+         if (x < minv) return;
+         suma += x;
+    });
+    return suma;
+  }
+};
+\end{lstlisting}}
+\defverbatim[colored]\lambdathisdos{
+\begin{lstlisting}[escapechar=@]
+struct X {
+  std::vector<int> v;
+  int minv;
+  int maxv;
+  int suma_rango() {
+    int suma { 0 };
+    std::for_each(v.begin(), v.end(), 
+      [&](int x) {
+         if (x > maxv) return;
+         if (x < minv) return;
+         suma += x;
+    });
+    return suma;
+  }
+};
+\end{lstlisting}}
+\defverbatim[colored]\lambdathistres{
+\begin{lstlisting}[escapechar=@]
+struct X {
+  std::vector<int> v;
+  int minv;
+  int maxv;
+  int suma_rango() {
+    int suma { 0 };
+    std::for_each(v.begin(), v.end(), 
+      [this,&suma](int x) {
+         if (x > maxv) return;
+         if (x < minv) return;
+         suma += x;
+    });
+    return suma;
+  }
+};
+\end{lstlisting}}
+\begin{frame}{Acceso a miembros desde una lambda}
+  \begin{itemize}
+    \item Si se puede capturar implícitamente el objeto\only<1>{\alert{ por valor}}\only<2>{\alert{ por referencia}}.
+    \item <3->Se puede capturar explícitamente \cppkey{this}.
+  \end{itemize}
+\only<1>{\lambdathisuno}\only<2>{\lambdathisdos}\only<3>{\lambdathistres}
+\end{frame}
+
+\subsection{Parámetros}
+
+\begin{frame}[t,fragile]{Omisión de parámetros}
+  \begin{itemize}
+    \item Si la lambda no toma parámetros, estos se pueden omitir.
+  \end{itemize}
+\begin{lstlisting}
+std::thread([](){ haz_algo(); });
+
+std::thread([]{ haz_algo(); });
+\end{lstlisting}
+\end{frame}
+
+\subsection{Tipo de retorno}
+
+\begin{frame}[t,fragile]{Especificación de tipo de retorno}
+  \begin{itemize}
+    \item Se puede especificar explícitamente el tipo de retorno de una lambda.
+    \item Se usa la nueva especificación postfija de tipo de retorno.
+  \end{itemize}
+\pause
+\begin{lstlisting}
+std::sort(v.begin(), v.end(), 
+  [](int x, int y) -> bool
+  { 
+    return abs(x) < abs(y); 
+  }
+);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Omisión de tipo de retorno}
+  \begin{itemize}
+    \item Se puede deducir el tipo de retorno, cuando el cuerpo es de la forma:
+  \end{itemize}
+\begin{lstlisting}
+{ return expresion; }
+\end{lstlisting}
+\pause
+  \begin{itemize}
+    \item Reglas:
+    \begin{itemize}
+      \item El tipo de retorno es el tipo de la expresión.
+      \item Se aplican si es necesario conversiones \emph{l-valor} a \emph{r-valor}, \emph{array} a puntero, y función a puntero.
+    \end{itemize}
+  \end{itemize}
+\begin{lstlisting}
+[&] { return x+y; }
+[&] () -> decltype(x+y) { return x+y; }
+\end{lstlisting}
+\pause
+  \begin{itemize}
+    \item En otro caso el tipo de retorno se considera \cppkey{void}.
+  \end{itemize}
+\begin{lstlisting}
+[] { haz_algo(); }
+[] () -> void { haz_algo(); }
+\end{lstlisting}
+\end{frame}
+
+\subsection{Modificadores}
+
+\begin{frame}[t,fragile]{Mutabilidad de una lambda}
+  \begin{itemize}
+    \item Por defecto una lambda da lugar a un operador de llamada \cppkey{const} en el objeto función.
+    \item Si se especifica que la lambda es \cppkey{mutable}, da lugar a un objeto función que es no constante.
+  \end{itemize}
+\begin{lstlisting}
+int ini=0;
+std::generate(v.begin(), v.end(), [=]() mutable{ return ini++; }
+std::generate(w.begin(), w.end(), [=]() mutable -> int { return ini++; }
+\end{lstlisting}
+\end{frame}
+
+\subsection{Lambdas y objetos clausura}
+
+\begin{frame}[t,fragile]{Objeto clausura}
+  \begin{itemize}
+    \item La evaluación de una expresión lambda da como resultado un temporal llamado \emph{objeto clausura}.
+    \item Un objeto clausura se comporta como un objeto función.
+    \item El tipo de una expresión lambda es el mismo que el tipo de su objeto clausura:
+      \begin{itemize}
+        \item Tipo único.
+        \item Tipo sin nombre.
+        \item Tipo de clase que no es unión.
+        \item No es un agregado.
+        \item Declarado en el alcance más pequeño que contiene la expresión lambda.
+      \end{itemize}
+  \end{itemize}
+\begin{lstlisting}
+auto comp = [](int x, int y) { return x>y; }
+sort(v1.begin(), v1.end(), comp);
+bool test = comp(2,4);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Miembros generados de una clausura}
+  \begin{itemize}
+    \item Tiene un constructor por defecto borrado.
+    \item Tiene un operador de asignación de copia borrado.
+    \item Tiene un constructor de copia implícitamente declarado.
+    \item Puede tener un constructor de movimiento implícitamente declarado.
+    \item Tiene un destructor implícitamente declarado.
+    \item Tiene un operador de llamada a función (\cppkey{operator()}) que es \cppkey{inline}.
+      \begin{itemize}
+        \item Parámetros y tipo de retorno coinciden con lambda.
+        \item El operador es \cppkey{const} si la lambda se declaró sin modificador \cppkey{mutable}.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Conversión a puntero a función}
+  \begin{itemize}
+    \item Condición:
+      \begin{itemize}
+        \item Debe tener una captura vacía.
+      \end{itemize}
+    \item Operador de conversión generado:
+      \begin{itemize}
+        \item Conversión a puntero a función.
+        \item Operador de conversión público, no virtual, no explícito, constante.
+        \item Mismos parámetros y tipo de retorno.
+        \item Devuelve un puntero a una función cuya invocación tiene el mismo efecto que invocar al 
+        operador de llamada a función del objeto clausura.
+      \end{itemize}
+  \end{itemize}
+\begin{lstlisting}
+void set_func(void (*f)());
+set_func([]{ std::cerr << "Adios"; });
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Peligro de la captura por referencia}
+  \begin{itemize}
+    \item La captura por referencia puede proporcionar beneficios, pero ...
+    \item \pause Presenta peligros si la lambda sobrevive a un valor capturado.
+      \begin{itemize}
+        \item Ejemplo: Callbacks.
+      \end{itemize}
+  \end{itemize}
+\begin{lstlisting}
+void f() {
+  int suma = 0;
+  registra_sumador([&suma](int x) { suma+=x; });
+  // ...
+}
+\end{lstlisting}
+\end{frame}

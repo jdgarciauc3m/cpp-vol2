@@ -1,0 +1,119 @@
+\section{Plantillas y programación genérica}
+
+\subsection{Programación genérica}
+
+\begin{frame}[t]{Programación genérica}
+\begin{itemize}
+  \item Las plantillas son la base de la \textgood{programación genérica}.
+\mode<presentation>{\vfill}
+  \item \textmark{Programación genérica}: Desarrollar código que funcione
+        con diversidad de tipos pasados como argumentos.
+    \begin{itemize}
+      \item Los tipos argumentos deben cumplir requisitos sintácticos y
+            semánticos.
+    \end{itemize}
+\mode<presentation>{\vfill\pause}
+  \item Los requisitos \textbad{no} se especifican explícitamente.
+    \begin{itemize}
+      \item Se deducen implícitamente.
+    \end{itemize}
+\mode<presentation>{\vfill\pause}
+  \item Ejemplos para \cppid{vector<T>}:
+    \begin{itemize}
+      \item \cppid{T} debe poderse copiar $\rightarrow$ Constructor de copia.
+      \item \cppid{T} debe poderse construir por defecto $\rightarrow$ Constructor por defecto.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Polimorfismo}
+\begin{itemize}
+  \item Tipos de polimorfismo:
+    \begin{itemize}
+      \item \textgood{Polimorfismo paramétrico}: Programación genérica.
+      \item \textgood{Polimorfismo ad hoc}: Programación orientada a objetos.
+    \end{itemize}
+\mode<presentation>{\vfill\pause}
+  \item Razones para elegir el polimorfismo paramétrico:
+    \begin{itemize}
+      \item \textmark{Rendimiento}: Dan lugar a código con menos sobrecarga 
+            en tiempo de ejecución.
+        \begin{itemize}
+          \item La mayoría de las decisiones pueden tomarse en tiempo de compilación.
+          \item Computación numérica.
+          \item Tiempo real duro.
+        \end{itemize}
+ 
+      \item \textmark{Flexibilidad}: Permite la integración de bibliotecas concebidas 
+            de forma separada.
+        \begin{itemize}
+          \item Tipos genéricos complejos.
+          \item Muchos ejemplos en biblioteca estándar.
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\subsection{Valores como parámetro de plantilla}
+
+\begin{frame}[fragile]{Parámetros de plantilla no-tipo}
+\begin{itemize}
+  \item Se puede definir una plantilla en la que alguno de sus parámetros no sea
+        un tipo.
+\begin{lstlisting}
+template <typename T, int N>
+struct array {
+  // ...
+};
+\end{lstlisting}
+  \item Los valores usados para instanciar un tipo concreto deben ser conocidos en
+        tiempo de compilación.
+\begin{lstlisting}
+array<double,1024> v1; // OK
+
+constexpr int max = 512;
+array<int,max> v2; // OK
+
+int tam = 256;
+array<long,tam> v3; // Error
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{block}{array.h}
+\lstinputlisting{ejemplos/07-generic/array/array.hpp}
+\end{block}
+\end{frame}
+
+\begin{frame}
+\begin{block}{main.cpp}
+\lstinputlisting{ejemplos/07-generic/array/main.cpp}
+\end{block}
+\end{frame}
+
+\subsection{Plantillas de función}
+
+\begin{frame}[fragile]{Plantillas de función}
+\begin{itemize}
+  \item Se puede definir una plantilla para definir de forma genérica
+        una familia de funciones.
+\begin{lstlisting}
+template <typename O, typename C>
+void imprime(O & fs, const C & c, string sep) {
+  for (int i=0; i<c.tamanyo(); ++i) {
+    fs << c[i] << sep;
+  }
+}
+\end{lstlisting}
+  \item En este caso los parámetros de la plantilla se deducen en su invocación.
+\begin{lstlisting}
+void f() {
+  vector<string> v1 { "Daniel", "Carlos", "Jose" };
+  array<double,4> v2 { 1.0, 2.0, 3.0, 4.0 };
+  imprime(cout, v1, "\n"); // O:ostream, C:vector<string>
+  imprime(cout, v2, " , "); // O:ostream, C:array<double,4>
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}

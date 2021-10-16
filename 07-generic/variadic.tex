@@ -1,0 +1,165 @@
+\section{Plantillas con número variable de argumentos}
+
+\subsection{Necesidad de plantillas variables}
+
+\begin{frame}[fragile]{Plantilla y número de argumentos}
+  \begin{itemize}
+    \item Se pueden definir plantillas con un número variable de argumentos.
+    \item Motivación:
+      \begin{itemize}
+        \item \pause Poder definir un tipo \cppid{tupla} (de cualquier dimensión).
+\begin{lstlisting}
+tupla<int,char> t1;
+tupla<int,long,int,string> t2;
+\end{lstlisting}
+        \item \pause Poder definir funciones con número variable de parámetros que
+        sean fuertemente tipadas.
+\begin{lstlisting}
+mi_print("Hola %: naciste en %", "Daniel", 1969); // No hay especificador de formato
+\end{lstlisting}
+      \end{itemize}
+    \item \pause El uso de plantillas requiere un uso intensivo de recursividad.
+  \end{itemize}
+\end{frame}
+
+\subsection{Sintaxis y operaciones}
+
+\begin{frame}[fragile]{Declaración}
+  \begin{itemize}
+    \item Clases
+\begin{lstlisting}
+template <typename ... Args>
+class tupla;
+\end{lstlisting}
+    \item \pause Funciones
+\begin{lstlisting}
+void mi_print(const char *s);
+
+template <typename T, typename ... Args>
+void mi_print(const char * s, T v, Args ... args);
+\end{lstlisting}
+    \item \pause Argumentos no-tipo.
+\begin{lstlisting}
+template <typename T, std::size_t ... D>
+class MultiVec;
+\end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Paquetes de parámetros}
+  \begin{itemize}
+    \item Paquetes de parámetros de plantillas.
+\begin{lstlisting}
+template <class ... Args>
+class tupla { /*...*/ };
+
+tupla<int,long,int,string> t2; // Args=int,long,int,string
+\end{lstlisting}
+    \item \pause Paquete de parámetros de función.
+\begin{lstlisting}
+void mi_print(const char *s);
+
+template <typename T, typename ... Args> 
+void mi_print(const char * s, T v, Args ... args); 
+\end{lstlisting}
+    \begin{itemize}
+      \item Args $\rightarrow$ Paquete de parámetros de plantilla.
+      \item args $\rightarrow$ Paquete de parámteros de función.
+    \end{itemize}
+\begin{lstlisting}
+mi_print("Hola %: naciste en %", "Daniel", 1969); 
+\end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Operaciones sobre paquetes}
+  \begin{itemize}
+    \item Solamente dos operaciones.
+      \begin{itemize}
+        \item \pause Desempaquetar o expandir: \cppid{...}.
+          \begin{itemize}
+            \item Aplicable a paquetes de parámetros de plantilla y a paquetes
+            de parámetros de función.
+            \item \cppid{Args...} se expande a una lista de argumentos.
+          \end{itemize}
+        \item \pause Contar el número delementos: \cppkey{sizeof}\cppid{...()}
+          \begin{itemize}
+            \item Determina el número de elementos en un paquete.
+            \item \cppkey{sizeof}\cppid{...(Args)}.
+          \end{itemize}
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\subsection{Funciones}
+
+\begin{frame}[fragile]
+\begin{lstlisting}
+void mi_print(const char * s) {
+  if (s==nullptr) return;
+  while (*s) {
+    if (*s=='%' and *++s!='%')
+      throw runtime_error("Falta argumento");
+    cout << *s++;
+  }
+}
+
+template <typename T, typename ... Args>
+void mi_print(const char * s, T v, Args ... args) {
+  if (s==nullptr) return;
+  while (*s) {
+    if (*s=='%' && *++s!='%') {
+      cout << v;
+      mi_print(++s, args...);
+      return;
+    }
+    cout << *s++;
+  }
+  throw runtime_error("Demasiados argumentos");
+}
+\end{lstlisting}
+\end{frame}
+
+\subsection{Clases}
+
+\begin{frame}[fragile]
+\begin{lstlisting}
+template <typename ... Args>
+class tupla;
+
+template <> class tupla<> {}; // Tupla vacía
+
+template <typename T, typename ... Args>
+class tupla<T,Args...> : private tupla<Args...> {
+private:
+  T dato;
+public:
+  tupla() : dato{} {}
+  /* ... */	
+};
+\end{lstlisting}
+\begin{itemize}
+  \item \pause \cppid{tupla<int,long,int,string>}
+  \item \cppid{tupla<long,int,string>}
+  \item \cppid{tupla<int,string>}
+  \item \cppid{tupla<string>}
+  \item \cppid{tupla<>}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{lstlisting}
+template <std::size_t N, typename T>
+struct elemento;
+
+template <typename T, typename ... Args>
+struct elemento<0,tupla<T,Args...>> {
+  using tipo = T;
+};
+
+template <std::size_t N, typename T, typename ... Args>
+struct elemento<N, tupla<T,Args...>> {
+  using tipo = typename elemento<N-1, tupla<Args...>>::tipo;
+};
+\end{lstlisting}
+\end{frame}
