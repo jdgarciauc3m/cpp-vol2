@@ -1,0 +1,14 @@
+STL_BASE=08-stl
+STL_PARTS= \
+$(STL_BASE)/*.tex  \
+metadata.tex \
+license-cc.tex
+
+STL_PDF=$(STL_BASE).pdf
+
+FINAL_STL_PDF=$(FINAL_DIR)/$(STL_PDF)
+
+STL_EJ_PARTS=$(STL_BASE)/ej/*.tex
+STL_EJ_PDF=$(STL_BASE)-ej.pdf
+FINAL_STL_EJ_PDF=$(FINAL_DIR)/$(STL_EJ_PDF)
+
